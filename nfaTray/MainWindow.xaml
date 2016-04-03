@@ -8,14 +8,14 @@
     
         Deactivated="Window_Deactivated"
         Topmost="True"
-        BorderThickness="1" BorderBrush="#FF1AB394"
+        BorderThickness="1" BorderBrush="#FF76A6CA"
     >
     <Grid  >
         <Grid.RowDefinitions>
             <RowDefinition Height="35"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid Background="#FF1AB394">
+        <Grid Background="#FF76A6CA">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="47*"/>
                 <ColumnDefinition Width="153*"/>
@@ -168,7 +168,7 @@
                     </Grid>
 
                     <Button Visibility="Hidden" Name="selectServer" Click="selectServer_Click" Content="בחר שרת" HorizontalAlignment="Left" Height="24" Margin="161,10,0,0" VerticalAlignment="Top" Width="77"/>
-                    <Button Name="changeUserPass" Click="changeUserPass_Click" Content="שנה שם משתמש" HorizontalAlignment="Left" Height="24" Margin="100,48,0,0" VerticalAlignment="Top" Width="138" RenderTransformOrigin="0.5,0.5" />
+                    <Button Name="changeUserPass" Click="changeUserPass_Click" Content="שנה שם משתמש" HorizontalAlignment="Left" Height="24" Margin="100,52,0,0" VerticalAlignment="Top" Width="138" RenderTransformOrigin="0.5,0.5" />
 
                 </Grid>
             </TabItem>

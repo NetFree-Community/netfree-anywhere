@@ -85,7 +85,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="..\nfgService\IPC.cs">
+    <Compile Include="..\nfaService\IPC.cs">
       <Link>IPC.cs</Link>
     </Compile>
     <Compile Include="App.xaml.cs">
