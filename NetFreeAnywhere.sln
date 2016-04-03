@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NfaService", "nfaService\NfaService.csproj", "{145B630E-F386-4A76-B3E4-0CE1700DFFA9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NfaTray", "nfaTray\NfaTray.csproj", "{A3EE1060-E8FB-4245-AC1F-B6DB1E0822EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NfaSetup", "nfaSetup\NfaSetup.csproj", "{1DF4E22A-4AF5-4D5F-96D5-9318500A9479}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{145B630E-F386-4A76-B3E4-0CE1700DFFA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{145B630E-F386-4A76-B3E4-0CE1700DFFA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{145B630E-F386-4A76-B3E4-0CE1700DFFA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{145B630E-F386-4A76-B3E4-0CE1700DFFA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3EE1060-E8FB-4245-AC1F-B6DB1E0822EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3EE1060-E8FB-4245-AC1F-B6DB1E0822EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3EE1060-E8FB-4245-AC1F-B6DB1E0822EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3EE1060-E8FB-4245-AC1F-B6DB1E0822EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DF4E22A-4AF5-4D5F-96D5-9318500A9479}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DF4E22A-4AF5-4D5F-96D5-9318500A9479}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DF4E22A-4AF5-4D5F-96D5-9318500A9479}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DF4E22A-4AF5-4D5F-96D5-9318500A9479}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
