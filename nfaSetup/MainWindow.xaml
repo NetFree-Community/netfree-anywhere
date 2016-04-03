@@ -1,0 +1,146 @@
+﻿<Window x:Class="NfaSetup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"  x:Name="root" 
+        Title="התקנת NetFree Anywhere" SizeToContent="Height" Width="525" FlowDirection="RightToLeft" ResizeMode="NoResize" Icon="NetFreeAnywareInstallSq.ico" >
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                <GradientStop Color="#FF76A6CA" Offset="1"/>
+                <GradientStop Color="White" Offset="0.535"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="150"/>
+            <RowDefinition Height="300"/>
+        </Grid.RowDefinitions>
+        
+        <Image Source="{StaticResource NetFreeAnywareLogo}"></Image>
+        <!-- Fill="{DynamicResource WiFreeLogo1__1__2}"
+        <Rectangle FlowDirection="LeftToRight"  Margin="10"  Fill="{StaticResource CachedNetFreeAnywareLogo}" d:IsLocked="True" />
+ -->
+        <TabControl  x:Name="TabControlWiz" Style="{StaticResource TabControlWizard}" Grid.Row="1" Padding="15,5,15,15" Margin="0,-25,0,0"  FontSize="16" Panel.ZIndex="0" Focusable="False" IsTabStop="False">
+            <TabItem Header="דירשות מערכת">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock FontSize="21.333" Foreground="#FF7B7979" Text="אופסס... אינכם מוכנים להתקנה!" />
+                        <TextBlock x:Name="osReqTxt" Text="התוכנה יכולה לפעול רק על מערכת הפעלה מגירסת Windows 7 ומעלה." Visibility="Collapsed" />
+                        <TextBlock x:Name="KBReqTxt" TextWrapping="WrapWithOverflow" Visibility="Collapsed">
+                            <Run x:Name="KbList" Text="להרצת התוכנה חסרים העדכונים: "/>
+                            <Run Text="נא פתחו את " />
+                            <Hyperlink>Windows Update</Hyperlink>
+                            <Run Text="וודאו שמחשבכם מעודכן ולאחר מכן נסו שוב להפעיל את ההתקנה" />
+                        </TextBlock>     
+                    </StackPanel>
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="46"  Click="Close"  FontSize="21.333" >
+                        סגור
+                    </Button>
+                </Grid>
+            </TabItem>
+            <TabItem Header="מסך פתיחה" >
+                <Grid>
+                    <RichTextBox IsTabStop="False" Focusable="False" IsReadOnly="True"  Background="Transparent" BorderThickness="0">
+                        <RichTextBox.Document>
+                            <FlowDocument FontSize="16">
+                                <Paragraph>
+                                    <Run FontSize="21.333" Foreground="#FF7B7979">
+                                        שלום!
+                                    </Run>
+                                    <LineBreak/>
+                                    <Run>
+                                        ברוכים הבאים להתקנת תוכנת NetFree Anywhere
+                                    </Run>
+                                    <LineBreak/>
+                                    <Run>
+                                        תוכנה זאת מאפשרת לכם להתחבר לסינון של נטפרי מעל כל רשת.
+                                    </Run>
+                                    <LineBreak/>
+                                   
+                                </Paragraph>
+                            </FlowDocument>
+                        </RichTextBox.Document>
+                    </RichTextBox>
+                    <Button HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="46"  Click="Next_OnClick1"  FontSize="21.333" >
+                        המשך
+                    </Button>
+                </Grid>
+            </TabItem>
+            <TabItem Header="הסרת אחריות"  >
+                <Grid>
+                    <StackPanel >
+                        <RichTextBox IsTabStop="False" Focusable="False"  IsReadOnly="True"  Background="Transparent" BorderThickness="0">
+                            <RichTextBox.Document>
+                                <FlowDocument FontSize="16">
+                                    <Paragraph>
+                                        <Run FontSize="21.333" Foreground="#FF7B7979">
+                                            לפני שנמשיך,
+                                        </Run>
+                                        <Run FontSize="21.333" Foreground="#FFFD0000" >
+                                            שימו לב!</Run>
+                                        <LineBreak/>
+                                        <Run>עליכם לדעת:</Run>
+                                    </Paragraph>
+                                    <List MarkerStyle="Decimal"  Padding="18,0,0,0">
+                                        <ListItem Background="#FFFDF4BF" >
+                                            <Paragraph >
+                                                <Run>התוכנה עלולה להסב נזק למחשב שייתכן ולא יהיה הפיך.</Run>
+                                                <Run Foreground="#FF22817C">NetFree נטפרי</Run>
+                                                <Run>לא תהיה אחראית לתקן את זה ובוודאי שלא תישא בשום נזק מחמת זה.</Run>
+                                            </Paragraph>
+                                        </ListItem>
+                                    </List>
+                                </FlowDocument>
+                            </RichTextBox.Document>
+                        </RichTextBox>
+                        <StackPanel  Margin="10" x:Name="agreeSection">
+                            <TextBlock>
+                                <Run>לאישור ולהסכמה, אנא הקלידו בתיבת הטקסט דלהלן את המילים:</Run>
+                            <LineBreak/>
+                            </TextBlock>
+                            <StackPanel Orientation="Horizontal" >
+                                <TextBlock>
+                                    <Run Foreground="#FFFB0000">אני מסכים</Run>
+                                    <Run>או</Run>
+                                    <Run Foreground="#FFFB0000">i agree</Run>
+                                </TextBlock>
+                                <TextBox x:Name="txtAgree"  Width="150" Margin="6,0" TextChanged="TextBox_TextChanged" />
+                            </StackPanel>
+                        </StackPanel>
+
+                    </StackPanel>
+                    <Button x:Name="ContniueToLicensBtn" Visibility="Hidden"  HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="46"  Click="Next_OnClick"  FontSize="21.333" >
+                        המשך
+                    </Button>
+                </Grid>
+            </TabItem>
+            <TabItem Header="רשיון">
+                <Grid>
+                    <FlowDocumentReader Document="{StaticResource licn}"  Margin="10,10,10,52.952" Zoom="79" ViewingMode="Scroll" BorderBrush="#FF759896" BorderThickness="2" FontSize="10" />
+                    <CheckBox x:Name="ArgCheckBox" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,15" FontSize="17" >קראתי ואני מסכים</CheckBox>
+                    <Button IsEnabled="{Binding IsChecked, ElementName=ArgCheckBox}" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="46"  Click="Install_OnClick"  FontSize="21.333" >
+                        התקנה!
+                    </Button>
+                </Grid>
+            </TabItem>
+            <TabItem Header="התקנה ומצב">
+                <Grid  >
+                    <StackPanel>
+                        <Grid>
+                            <ProgressBar x:Name="prgStatus" IsIndeterminate="True" Background="#19E6E6E6" Foreground="#1906B025"  />
+                            <TextBox  x:Name="tbStatus" IsReadOnly="True" Height="180" Background="Transparent" />
+                        </Grid>
+                        <TextBlock Visibility="Collapsed" x:Name="succsMsgTb" Text="ההתקנה הושלמה בהצלחה!" FontWeight="Bold" FontSize="14.667" Foreground="#FF007A00" />
+                        <TextBlock Visibility="Collapsed" x:Name="errorMsgTb" Text="התרחשה שגיאה." FontWeight="Bold" FontSize="14.667" Foreground="Red" />
+                    </StackPanel>
+                    <Button x:Name="brnClose" HorizontalAlignment="Right"  Visibility="Collapsed" VerticalAlignment="Bottom" Padding="20,10" Click="Close">
+                        סגור
+                    </Button>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>
