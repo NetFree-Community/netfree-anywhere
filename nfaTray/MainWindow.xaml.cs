@@ -17,6 +17,7 @@ using System.Collections.ObjectModel;
 using System.Security.Permissions;
 using System.ServiceModel;
 using System.Windows.Forms;
+using System.Threading;
 
 
 namespace nfaTray
@@ -42,7 +43,7 @@ namespace nfaTray
 
         public ObservableCollection<ServerInfo> listServers { get; set; }
 
-        class Client : INfgClientCallback
+        class Client : INfaClientCallback
         {
             MainWindow _app;
 
@@ -57,7 +58,7 @@ namespace nfaTray
             }
         }
 
-        DuplexChannelFactory<INfgServiceNotify> factory;
+        DuplexChannelFactory<INfaServiceNotify> factory;
 
         private string _vpnStatus = null;
         public string vpnStatus
@@ -83,13 +84,13 @@ namespace nfaTray
             set
             {
                 _vpnError = value;
-                vpnStatus = (value == null) ?  null : "error";
+                vpnStatus = (value == null) ? null : "error";
                 OnPropertyChanged("vpnError");
             }
         }
         public string ipAddress { get; set; }
 
-        INfgServiceNotify service;
+        INfaServiceNotify service;
 
         NotifyIcon ni;
 
@@ -114,10 +115,10 @@ namespace nfaTray
             {
                 TabControlWiz.SelectedIndex = Tabs.UserPass;
             }
-            
+
 
             ni = new NotifyIcon();
-            ni.Text = "NetFree Global";
+            ni.Text = "NetFree Anywhere";
             ni.Visible = true;
             ni.Icon = nfaTray.Properties.Resources.NetFreeAnywareLogoSq;
             ni.Click += ni_Click;
@@ -131,11 +132,10 @@ namespace nfaTray
 
             listServers = new ObservableCollection<ServerInfo>();
             cboServers.ItemsSource = listServers;
-
-
-            RefreshServerList();
-            
+            cboServers.SelectionChanged += cboServers_SelectionChanged;
         }
+
+
 
         void SetWindowPosition()
         {
@@ -162,25 +162,63 @@ namespace nfaTray
             };
 
 
-            factory = new DuplexChannelFactory<INfgServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere"));
+            factory = new DuplexChannelFactory<INfaServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere"));
 
             service = factory.CreateChannel();
             service.SubscribeClient();
         }
 
+        struct Country
+        {
+            public string Name;
+            public Image Icon;
+        }
+
+
+        private void disInvoke(Action action)
+        {
+            Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Normal, action);
+        }
+
         void RefreshServerList()
         {
-            var list = nfgServers.GetServers();
+            var list = nfaServers.GetServers();
 
+            var countryMap = new Dictionary<string, Country>();
+            countryMap["il"] = new Country { Name = "ישראל" };
+            countryMap["uk"] = new Country { Name = "לונדון" };
+            countryMap["us"] = new Country { Name = "ארצות הברית" };
 
             listServers.Clear();
             foreach (var item in list)
             {
+
                 var server = new ServerInfo
                 {
-                    Server = item, Name = item.Country 
+                    Server = item,
+                    Name = countryMap.ContainsKey(item.Country) ? countryMap[item.Country].Name : item.Country
                 };
                 listServers.Add(server);
+
+
+
+                nfaServers.PingHostTime(item.Host, (t) =>
+                {
+
+                    item.Latency = t;
+                    server.Speed = t + "ms";
+                    disInvoke(() =>
+                    {
+                        var index = listServers.IndexOf(server);
+                        listServers.Remove(server);
+                        listServers.Insert(index, server);
+                        if (server.Server.Host == Properties.Settings.Default.Host)
+                        {
+                            cboServers.SelectedValue = server;
+                        }
+                    });
+
+                });
             }
 
         }
@@ -196,10 +234,21 @@ namespace nfaTray
                 if (bayeCountParams.Length >= 2)
                 {
                     int upload = int.Parse(bayeCountParams[1]);
-                    int download = int.Parse(bayeCountParams[0]); 
+                    int download = int.Parse(bayeCountParams[0]);
 
                     UploadRate.Text = SizeSuffix(upload);
                     DownloadRate.Text = SizeSuffix(download);
+                }
+
+                if (vpnStatus == "connecting" && DateTime.Now.Subtract(startConnectingTime).TotalSeconds > 20)
+                {
+                    startConnectingTime = DateTime.Now;
+                    vpnStatus = "error";
+                    vpnError = "לא מצליח להתחבר";
+                    new Thread(() =>
+                    {
+                        service.Disconnect();
+                    }).Start();
                 }
             }
             if (state.StartsWith(">STATE:"))
@@ -252,7 +301,7 @@ namespace nfaTray
 
         void win_onConnect(string obj)
         {
-           
+
         }
 
         void ni_Click(object sender, EventArgs e)
@@ -267,46 +316,91 @@ namespace nfaTray
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(name));
         }
-        
-        
+
+
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             this.Hide();
         }
 
-        DateTime lastEnter;
 
-        private void Window_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+
+
+        string hostConnect = null;
+        DateTime startConnectingTime = DateTime.Now;
+
+        int[] portsList = { 1723, 53, 123, 124, 22, 25, 80, 443 };
+
+
+        private void ConnectToHost(string host)
         {
-            
-        }
+            nfaServers.findOpenPort(host, portsList, (port) =>
+            {
+                disInvoke(() =>
+                {
 
-        private void Window_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            lastEnter = DateTime.Now;
+                    if (port == -1)
+                    {
+                        port = 53;
+                    }
+                    startConnectingTime = DateTime.Now;
+                    service.Connect(host, port, Properties.Settings.Default.User, Properties.Settings.Default.Password);
+                });
+            });
         }
-
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
             vpnStatus = "connecting";
-            service.Connect("s.il1.ovpn.nfg.netfree.link", 53, Properties.Settings.Default.User , Properties.Settings.Default.Password);
+
+            if (Properties.Settings.Default.Host.Length > 2)
+            {
+                ConnectToHost(Properties.Settings.Default.Host);
+                return;
+            }
+
+            var list = nfaServers.GetServers();
+
+            if (list.Count == 0)
+            {
+                vpnStatus = "error";
+                vpnError = "לא נמצא שרת נטפרי";
+                return;
+            }
+
+            var listHost = new List<string>();
+            foreach (var item in list)
+            {
+                listHost.Add(item.Host);
+            }
+
+            nfaServers.findFastHost(listHost.ToArray(), (host, t) =>
+            {
+                ConnectToHost(host);
+            });
         }
 
         private void btnDisconnect_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            service.Disconnect();
-            vpnStatus = null;
+            new Thread(() =>
+            {
+                service.Disconnect();
+                disInvoke(() =>
+                {
+                    vpnStatus = null;
+                });
+            }).Start();
         }
 
         private void btnSelectServer_Click(object sender, RoutedEventArgs e)
         {
+
         }
 
         private void Window_LostFocus(object sender, System.Windows.RoutedEventArgs e)
         {
-            
+
         }
 
         private void Window_Deactivated(object sender, EventArgs e)
@@ -321,6 +415,7 @@ namespace nfaTray
 
         private void selectServer_Click(object sender, RoutedEventArgs e)
         {
+            RefreshServerList();
             TabControlWiz.SelectedIndex = Tabs.Servers;
         }
 
@@ -346,6 +441,24 @@ namespace nfaTray
 
         }
 
+        void cboServers_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var seleted = (ServerInfo)cboServers.SelectedValue;
+            if (seleted != null)
+            {
+                Properties.Settings.Default.Host = seleted.Server.Host;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+
+        private void autoSelect_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.Host = "";
+            Properties.Settings.Default.Save();
+            cboServers.SelectedValue = null;
+        }
+
 
 
     }
@@ -354,6 +467,6 @@ namespace nfaTray
     {
         public string Name { get; set; }
         public string Speed { get; set; }
-        public nfgServer Server { get; set; }
+        public nfaServer Server { get; set; }
     }
 }

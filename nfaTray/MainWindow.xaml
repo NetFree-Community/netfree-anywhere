@@ -82,7 +82,7 @@
                         <RowDefinition Height="47*"/>
                     </Grid.RowDefinitions>
 
-                    
+
                     <Grid Grid.Row="1" Margin="10">
                         <TextBlock Foreground="#FFDA2828">
                             <Run FontWeight="Bold"> שגיאה: </Run>
@@ -157,7 +157,7 @@
                             </Style>
                         </Grid.Style>
                     </Grid>
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="2" Background="#FFD9E5EE">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
@@ -166,30 +166,31 @@
                         <Button Grid.Column="1" x:Name="btnDisconnect" Click="btnDisconnect_Click"  Content="התנתק"  VerticalAlignment="Center" HorizontalAlignment="Center" RenderTransformOrigin="0.024,1.315" Width="84"  />
 
                     </Grid>
-
-                    <Button Visibility="Hidden" Name="selectServer" Click="selectServer_Click" Content="בחר שרת" HorizontalAlignment="Left" Height="24" Margin="161,10,0,0" VerticalAlignment="Top" Width="77"/>
-                    <Button Name="changeUserPass" Click="changeUserPass_Click" Content="שנה שם משתמש" HorizontalAlignment="Left" Height="24" Margin="100,52,0,0" VerticalAlignment="Top" Width="138" RenderTransformOrigin="0.5,0.5" />
+                    <StackPanel Margin="7">
+                        <Button Name="changeUserPass" Click="changeUserPass_Click" Content="שנה שם משתמש" Height="24" Margin="3" VerticalAlignment="Top"  />
+                        <Button Visibility="Visible" Name="selectServer" Click="selectServer_Click" Content="בחר שרת" Height="24" Margin="3" VerticalAlignment="Top" />
+                    </StackPanel>
 
                 </Grid>
             </TabItem>
             <TabItem Header="שרתים">
                 <Grid Background="White" Margin="-4">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="51*"/>
-                        <RowDefinition Height="301*"/>
+                        <RowDefinition Height="50*"/>
+                        <RowDefinition Height="313*"/>
                     </Grid.RowDefinitions>
-                    <Button Grid.Row="0" x:Name="refreshServers" Content="רענן רשימת שרתים" HorizontalAlignment="Center" Height="28"   Width="194" />
+                    <Button Grid.Row="0" x:Name="autoSelect" Click="autoSelect_Click" Content="בחר שרת אוטומטית"    Margin="10"  VerticalAlignment="Center" Height="22"  />
 
-                    <ListBoxItem Grid.RowSpan="2" />
-                    <ListBox Grid.Row="1" BorderThickness="0" x:Name="cboServers" Background="Transparent" Margin="0,0,0,0" Grid.RowSpan="2" >
+                    <ListBoxItem Grid.Row="1"  />
+                    <ListBox  Grid.Row="1" BorderThickness="0" x:Name="cboServers" Background="Transparent" Margin="0,0,0,0" >
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="{x:Type ListBoxItem}" >
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="{x:Type ListBoxItem}">
                                             <Grid Height="35" Margin="5,1" x:Name="grid" Background="#FFD1D1D1" >
-                                                <TextBlock Text="{Binding Name}" Margin="50,12,0,12" HorizontalAlignment="Left" Width="168" VerticalAlignment="Center" FontSize="14"  />
-                                                <TextBlock Text="{Binding Speed}" Margin="0,10,5,10" HorizontalAlignment="Right" Width="50" VerticalAlignment="Center" FontSize="14"    />
+                                                <TextBlock Text="{Binding Name}" Margin="50,12,0,12" HorizontalAlignment="Left" Width="168" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding Speed}" Margin="0,10,5,10" HorizontalAlignment="Right" Width="50" VerticalAlignment="Center" />
 
                                                 <Image FlowDirection="LeftToRight" HorizontalAlignment="Left" Margin="5,5,0,5" Width="35" RenderTransformOrigin="0.5,0.5" />
 

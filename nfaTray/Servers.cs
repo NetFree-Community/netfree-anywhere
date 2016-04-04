@@ -10,28 +10,31 @@ using System.Net.NetworkInformation;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Heijden.DNS;
+using System.Net.Sockets;
+using System.Security.Cryptography;
 
 
 namespace nfaTray
 {
 
-    public class nfgServers
+    public class nfaServers
     {
 
-        public static List<nfgServer> GetServers()
+        public static List<nfaServer> GetServers()
         {
 
             var list = new List<string>();
-            
+
             Resolver resolver = new Resolver();
             Response response = resolver.Query("servers.ovpn.nfg.netfree.link", QType.TXT);
-            foreach (AnswerRR answerRR in response.Answers){
-                var str  = answerRR.RECORD.ToString();
-                list.Add(str.Substring(1,str.Length-2));
+            foreach (AnswerRR answerRR in response.Answers)
+            {
+                var str = answerRR.RECORD.ToString();
+                list.Add(str.Substring(1, str.Length - 2));
             }
-                
 
-            var listServers = new List<nfgServer>();
+
+            var listServers = new List<nfaServer>();
 
             foreach (string item in list)
             {
@@ -39,7 +42,7 @@ namespace nfaTray
 
                 if (tmp.Length > 1)
                 {
-                    var server = new nfgServer
+                    var server = new nfaServer
                     {
                         Country = tmp[1],
                         Host = tmp[0],
@@ -50,6 +53,76 @@ namespace nfaTray
             }
 
             return listServers;
+
+        }
+
+        public static void findFastHost(string[] nameOrAddress, Action<string, long> callback)
+        {
+            object lockAction = new Object();
+            bool run = false;
+            foreach (var item in nameOrAddress)
+            {
+                PingHostTime(item, (t) =>
+                {
+                    lock (lockAction)
+                    {
+                        if (run) return;
+                        run = true;
+                        callback.Invoke(item, t);
+                    }
+                });
+            }
+
+        }
+
+        public static void findOpenPort(string host, int[] ports, Action<int> callback)
+        {
+            object lockAction = new Object();
+            bool run = false;
+            int endCount = 0; 
+            foreach (var port in ports)
+            {
+                new System.Threading.Thread(() =>
+                {
+                    using (var udpClient = new UdpClient())
+                    {
+                        udpClient.Connect(host, port);
+                        byte[] receiveBytes = null;
+                        IPEndPoint nfReceive = null;
+                        nfReceive = new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 0);
+                        udpClient.Client.ReceiveTimeout = 2000;
+
+                        byte[] sendBytes = new byte[22];
+                        (new RNGCryptoServiceProvider()).GetBytes(sendBytes);
+                        sendBytes[0] = 0x38;
+                        udpClient.Send(sendBytes, sendBytes.Length);
+                        try
+                        {
+                            receiveBytes = udpClient.Receive(ref nfReceive);
+                        }
+                        catch (Exception) { }
+
+                        if (receiveBytes != null)
+                        {
+                            lock (lockAction)
+                            {
+                                if (!run){
+                                    run = true;
+                                    callback.Invoke(port);
+                                }
+                            }
+                        }
+                        endCount++;
+                        if (endCount == ports.Length && !run)
+                        {
+                            run = true;
+                            callback.Invoke(-1);
+                        }
+                    }
+
+                }).Start();  
+            }
+
 
         }
 
@@ -76,7 +149,7 @@ namespace nfaTray
             }).Start();
         }
     }
-    public class nfgServer
+    public class nfaServer
     {
         public long Latency { get; set; }
         public string Country { get; set; }

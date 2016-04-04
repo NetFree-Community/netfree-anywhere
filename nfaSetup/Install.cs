@@ -141,12 +141,14 @@ namespace NfaSetup
         public static bool CheckVpnAdapter()
         {
             int i = 0;
-            Process p = new Process();
-            p.StartInfo.FileName = PathOpenVpn;
-            p.StartInfo.Arguments = " --show-adapters";
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.UseShellExecute = false;
-            p.Start();
+            var StartInfo = new ProcessStartInfo();
+            StartInfo.FileName = PathOpenVpn;
+            StartInfo.Arguments = " --show-adapters";
+            StartInfo.RedirectStandardOutput = true;
+            StartInfo.RedirectStandardError = true;
+            StartInfo.UseShellExecute = false;
+            StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            Process p = Process.Start(StartInfo);
             p.BeginOutputReadLine();
             string sOut = "";
             p.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
@@ -164,8 +166,9 @@ namespace NfaSetup
 
         private void InstallTap()
         {
-            if (CheckVpnAdapter()) return;
 
+            if (CheckVpnAdapter()) return;
+            
             Process p = new Process();
             p.StartInfo.FileName = PathTapInstaller;
             p.StartInfo.Arguments = " install \"" + PathTapVista + "\" tap0901 ";

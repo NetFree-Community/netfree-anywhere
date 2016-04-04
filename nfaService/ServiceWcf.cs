@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.ServiceModel;
 
 [ServiceBehavior(InstanceContextMode = InstanceContextMode.PerCall, ConcurrencyMode = ConcurrencyMode.Reentrant, IncludeExceptionDetailInFaults = true, AutomaticSessionShutdown = false)]
-internal class ServiceImplementation : INfgServiceNotify
+internal class ServiceImplementation : INfaServiceNotify
 {
 
     public static nfaService.IPCServiceConn conn;
 
     public void SubscribeClient()
     {
-        var current = OperationContext.Current.GetCallbackChannel<INfgClientCallback>();
+        var current = OperationContext.Current.GetCallbackChannel<INfaClientCallback>();
         System.Threading.Tasks.Task.Factory.StartNew(() =>
         {
             if (conn != null) conn.AddTray(current);
@@ -19,7 +19,7 @@ internal class ServiceImplementation : INfgServiceNotify
 
     public void UnSubscribeClient()
     {
-        var chanel = OperationContext.Current.GetCallbackChannel<INfgClientCallback>();
+        var chanel = OperationContext.Current.GetCallbackChannel<INfaClientCallback>();
         if (conn != null) conn.RemoveTray(chanel);
     }
 

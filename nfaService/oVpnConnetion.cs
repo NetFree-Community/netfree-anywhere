@@ -14,7 +14,7 @@ namespace nfaService
     class IPCServiceConn
     {
         private oVpnConnetion oVpnConnetion;
-        private readonly List<INfgClientCallback> TarysChanel = new List<INfgClientCallback>();
+        private readonly List<INfaClientCallback> TarysChanel = new List<INfaClientCallback>();
         ServiceHost host;
         public IPCServiceConn(oVpnConnetion oVpnConnetion)
         {
@@ -23,17 +23,17 @@ namespace nfaService
 
             oVpnConnetion.onState += oVpnConnetion_onState;
             host = new ServiceHost(typeof(ServiceImplementation), new Uri(@"net.pipe://localhost"));
-            host.AddServiceEndpoint(typeof(INfgServiceNotify), new NetNamedPipeBinding(), "netfree-anywhere");
+            host.AddServiceEndpoint(typeof(INfaServiceNotify), new NetNamedPipeBinding(), "netfree-anywhere");
             host.Open();
 
         }
 
-        public void AddTray(INfgClientCallback chanel)
+        public void AddTray(INfaClientCallback chanel)
         {
             TarysChanel.Add(chanel);
         }
 
-        public void RemoveTray(INfgClientCallback chanel)
+        public void RemoveTray(INfaClientCallback chanel)
         {
             TarysChanel.Remove(chanel);
         }

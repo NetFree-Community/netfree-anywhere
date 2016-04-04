@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.ServiceModel;
 
-public interface INfgClientCallback
+public interface INfaClientCallback
 {
     [OperationContract(IsOneWay = true)]
     void CallToTray(string state);
 }
 
-[ServiceContract(CallbackContract = typeof(INfgClientCallback))]
-public interface INfgServiceNotify
+[ServiceContract(CallbackContract = typeof(INfaClientCallback))]
+public interface INfaServiceNotify
 {
     [OperationContract]
     void SubscribeClient();
