@@ -162,7 +162,7 @@ namespace nfaTray
             };
 
 
-            factory = new DuplexChannelFactory<INfaServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere"));
+            factory = new DuplexChannelFactory<INfaServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere/control"));
 
             service = factory.CreateChannel();
             service.SubscribeClient();
@@ -327,19 +327,20 @@ namespace nfaTray
 
 
 
-        string hostConnect = null;
+
         DateTime startConnectingTime = DateTime.Now;
 
-        int[] portsList = { 1723, 53, 123, 124, 22, 25, 80, 443 };
+        int[] portsList = { 26, 53, 123, 137, 1023, 1812, 2083, 5060 };
 
 
         private void ConnectToHost(string host)
         {
-            nfaServers.findOpenPort(host, portsList, (port) =>
+            nfaServers.findOpenPort(host, portsList.OrderBy(a => Guid.NewGuid()).ToArray(), (port) =>
             {
+                //int port = -1;
                 disInvoke(() =>
                 {
-
+                    Console.WriteLine("port " + port.ToString());
                     if (port == -1)
                     {
                         port = 53;

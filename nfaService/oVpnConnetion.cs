@@ -22,8 +22,8 @@ namespace nfaService
             ServiceImplementation.conn = this;
 
             oVpnConnetion.onState += oVpnConnetion_onState;
-            host = new ServiceHost(typeof(ServiceImplementation), new Uri(@"net.pipe://localhost"));
-            host.AddServiceEndpoint(typeof(INfaServiceNotify), new NetNamedPipeBinding(), "netfree-anywhere");
+            host = new ServiceHost(typeof(ServiceImplementation), new Uri(@"net.pipe://localhost/netfree-anywhere/"));
+            host.AddServiceEndpoint(typeof(INfaServiceNotify), new NetNamedPipeBinding(), "control");
             host.Open();
 
         }
@@ -39,7 +39,7 @@ namespace nfaService
         }
 
         public void Connect(string ip, int port, string user, string pass){
-            Console.WriteLine("get connect");
+            Console.WriteLine("get connect to: " + ip + ":" + port.ToString() );
             this.oVpnConnetion.ConnectToVPN(ip, port, user, pass);
         }
 
@@ -152,8 +152,6 @@ namespace nfaService
 
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
-
-            Console.WriteLine("test");
             
             Thread.Sleep(100);
 
@@ -173,8 +171,8 @@ namespace nfaService
 
             }
 
-            //File.Delete(pathConfig);
-            //File.Delete(pathPass);
+            File.Delete(pathConfig);
+            File.Delete(pathPass);
             
             if (client == null)
             {
@@ -195,6 +193,8 @@ namespace nfaService
             while (true)
             {
                 string line = telnet.GetLine();
+               
+               
                 if(line != null){
                     if (onState != null && line.StartsWith(">"))
                     {

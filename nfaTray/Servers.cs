@@ -92,9 +92,10 @@ namespace nfaTray
                         nfReceive = new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 0);
                         udpClient.Client.ReceiveTimeout = 2000;
 
-                        byte[] sendBytes = new byte[22];
+                        byte[] sendBytes = new byte[14];
                         (new RNGCryptoServiceProvider()).GetBytes(sendBytes);
                         sendBytes[0] = 0x38;
+                        sendBytes[9] = sendBytes[10] = sendBytes[11] = sendBytes[12] = sendBytes[13] = 0;
                         udpClient.Send(sendBytes, sendBytes.Length);
                         try
                         {
