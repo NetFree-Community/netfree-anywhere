@@ -31,8 +31,12 @@ internal class ServiceImplementation : INfaServiceNotify
     public void Disconnect()
     {
         if (conn != null) conn.Disconnect();
-    }
+    } 
 
+    public long Ping()
+    {
+        return  DateTime.Now.Ticks;
+    }
     
 }
 

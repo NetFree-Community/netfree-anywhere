@@ -21,6 +21,9 @@ public interface INfaServiceNotify
 
     [OperationContract]
     void Disconnect();
+
+    [OperationContract]
+    long Ping();
 }
 
 

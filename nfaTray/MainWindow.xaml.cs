@@ -163,9 +163,17 @@ namespace nfaTray
 
 
             factory = new DuplexChannelFactory<INfaServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere/control"));
-
             service = factory.CreateChannel();
             service.SubscribeClient();
+
+            var timer = new System.Timers.Timer(10000);
+            timer.Elapsed += timer_Elapsed;
+            timer.Enabled = true;
+        }
+
+        void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            service.Ping();
         }
 
         struct Country
@@ -444,20 +452,26 @@ namespace nfaTray
 
         void cboServers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            var org = e.OriginalSource;
+            var va = e.Source;
             var seleted = (ServerInfo)cboServers.SelectedValue;
             if (seleted != null)
             {
                 Properties.Settings.Default.Host = seleted.Server.Host;
-                Properties.Settings.Default.Save();
             }
+            else
+            {
+                Properties.Settings.Default.Host = "";
+            }
+
+            Properties.Settings.Default.Save();
         }
 
 
         private void autoSelect_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.Host = "";
-            Properties.Settings.Default.Save();
-            cboServers.SelectedValue = null;
+
+            cboServers.SelectedIndex = -1;
         }
 
 
