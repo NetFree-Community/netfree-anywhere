@@ -11,7 +11,7 @@ persist-tun
 nobind
 
 remote {{remote_ip_port}}
-proto udp
+proto {{proto}}
 
 comp-lzo
 

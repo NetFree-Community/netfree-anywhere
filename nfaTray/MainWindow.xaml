@@ -77,8 +77,8 @@
             <TabItem Header="ראשי" Margin="0">
                 <Grid Background="White" Margin="-4">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="222*"/>
-                        <RowDefinition Height="94*"/>
+                        <RowDefinition Height="218*"/>
+                        <RowDefinition Height="98*"/>
                         <RowDefinition Height="47*"/>
                     </Grid.RowDefinitions>
 
@@ -122,9 +122,9 @@
                     </Grid>
                     <Grid Grid.Row="1"  >
                         <StackPanel Margin="10">
-                            <Label FontWeight="Bold"  FontSize="20" HorizontalAlignment="Center" >
+                            <TextBlock FontWeight="Bold"  FontSize="20" TextAlignment="Center"    Margin="0" >
                                 <Run x:Name="VpnIP" >0.0.0.0</Run>
-                            </Label>
+                            </TextBlock>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -145,6 +145,9 @@
                                 </Grid>
 
                             </Grid>
+                            <TextBlock TextAlignment="Center" FontSize="13">
+                                <Run x:Name="VpnHostName" > server.com</Run>
+                            </TextBlock>
                         </StackPanel>
                         <Grid.Style>
                             <Style>
@@ -167,7 +170,7 @@
 
                     </Grid>
                     <StackPanel Margin="7">
-                        <Button Name="changeUserPass" Click="changeUserPass_Click" Content="שנה שם משתמש" Height="24" Margin="3" VerticalAlignment="Top"  />
+                        <Button Name="changeUserPass" Click="changeVpnIdentifier_Click" Content="שנה מזהה חיבור" Height="24" Margin="3" VerticalAlignment="Top"  />
                         <Button Visibility="Visible" Name="selectServer" Click="selectServer_Click" Content="בחר שרת" Height="24" Margin="3" VerticalAlignment="Top" />
                     </StackPanel>
 
@@ -210,7 +213,7 @@
                     </ListBox>
                 </Grid>
             </TabItem>
-            <TabItem Header="שם משתמש">
+            <TabItem Visibility="Collapsed" Header="שם משתמש">
                 <Grid Background="White" Margin="-4">
                     <StackPanel Margin="10,10,10,10" >
                         <TextBlock>
@@ -228,7 +231,19 @@
 
                 </Grid>
             </TabItem>
+            <TabItem Header="מזהה">
+                <Grid Background="White" Margin="-4">
+                    <StackPanel Margin="10,10,10,10" >
+                        <TextBlock>
 
+                        </TextBlock>
+                        <Label Content="מזהה חיבור"  VerticalAlignment="Top"/>
+                        <TextBox FlowDirection="LeftToRight" x:Name="vpnIdentifier" Height="28"   TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+                        <Button  Name="btnSaveVpnIdentifier"  Click="btnSaveVpnIdentifier_Click" Content="שמור" HorizontalAlignment="Center" Height="26" Margin="0,10,0,0" Width="172"/>
+
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

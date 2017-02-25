@@ -18,6 +18,8 @@ using System.Security.Permissions;
 using System.ServiceModel;
 using System.Windows.Forms;
 using System.Threading;
+using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 
 namespace nfaTray
@@ -58,7 +60,7 @@ namespace nfaTray
             }
         }
 
-        DuplexChannelFactory<INfaServiceNotify> factory;
+        DuplexChannelFactory<INfaServiceNotify> factory = null;
 
         private string _vpnStatus = null;
         public string vpnStatus
@@ -99,6 +101,7 @@ namespace nfaTray
             public const int Main = 0;
             public const int Servers = 1;
             public const int UserPass = 2;
+            public const int VpnIdentifier = 3;
         };
 
         public MainWindow()
@@ -111,9 +114,10 @@ namespace nfaTray
 
             SetWindowPosition();
 
-            if (Properties.Settings.Default.User == "" || Properties.Settings.Default.Password == "")
+            if (Properties.Settings.Default.VpnIdentifier.IndexOf(':') == -1)
             {
-                TabControlWiz.SelectedIndex = Tabs.UserPass;
+                TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
+                vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
             }
 
 
@@ -161,20 +165,31 @@ namespace nfaTray
                 ReceiveTimeout = time
             };
 
+            if (factory != null)
+            {
+                try
+                {
+                    factory.Close();
+                }
+                catch 
+                { 
+                }
+                
+            }
 
             factory = new DuplexChannelFactory<INfaServiceNotify>(new InstanceContext(client), binding, new EndpointAddress("net.pipe://localhost/netfree-anywhere/control"));
             service = factory.CreateChannel();
-            service.SubscribeClient();
-
-            var timer = new System.Timers.Timer(10000);
-            timer.Elapsed += timer_Elapsed;
-            timer.Enabled = true;
+            try
+            {
+                service.SubscribeClient();
+            }
+            catch (Exception)
+            { 
+            }
+            
+            
         }
 
-        void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            service.Ping();
-        }
 
         struct Country
         {
@@ -230,9 +245,16 @@ namespace nfaTray
             }
 
         }
-
-
+        
         void client_onState(string state)
+        {
+            disInvoke(() =>
+            {
+                client_onState_safe(state);
+            });
+        }
+
+        void client_onState_safe(string state)
         {
 
             if (state.StartsWith(">BYTECOUNT:"))
@@ -255,7 +277,10 @@ namespace nfaTray
                     vpnError = "לא מצליח להתחבר";
                     new Thread(() =>
                     {
-                        service.Disconnect();
+                        tryService(() =>
+                        {
+                            service.Disconnect();
+                        });
                     }).Start();
                 }
             }
@@ -268,8 +293,10 @@ namespace nfaTray
                     {
                         //>STATE:1459521058,CONNECTED,SUCCESS,172.16.1.1,185.18.206.203
                         ipAddress = stateParams[3];
-                        vpnStatus = "connected";
                         VpnIP.Text = ipAddress;
+                        VpnHostName.Text = SettingsHost;
+                        vpnStatus = "connected";
+ 
                     }
 
                     if (stateParams[1] == "EXITING")
@@ -314,6 +341,7 @@ namespace nfaTray
 
         void ni_Click(object sender, EventArgs e)
         {
+            this.SetWindowPosition();
             this.Show();
             this.Activate();
         }
@@ -334,72 +362,171 @@ namespace nfaTray
 
 
 
-
-
+        string SettingsHost = "";
         DateTime startConnectingTime = DateTime.Now;
 
-        int[] portsList = { 26, 53, 123, 137, 1023, 1812, 2083, 5060 };
-
-
-        private void ConnectToHost(string host)
+        private void connectVpn()
         {
-            nfaServers.findOpenPort(host, portsList.OrderBy(a => Guid.NewGuid()).ToArray(), (port) =>
+
+            if (vpnStatus == "connecting") return;
+
+            vpnStatus = "connecting";
+
+
+
+            ProtocolType proto = ProtocolType.Unknown;
+            string hostName = Properties.Settings.Default.Host;
+            string userName = "";
+            string password = "";
+            int port = 0;
+
+
+            Regex VpnIdentifierRegex = new Regex("^((?<proto>tcp|udp)://)?(?<user>[^:]+):(?<pass>[^@]+)(@(?<host>[^:]+)(:(?<port>\\d+))?)?");
+
+            Match match = VpnIdentifierRegex.Match(Properties.Settings.Default.VpnIdentifier);
+
+            if (match.Success)
             {
-                //int port = -1;
+                proto = match.Groups["proto"].Value == "tcp" ? ProtocolType.Tcp : (match.Groups["proto"].Value == "udp" ? ProtocolType.Udp : ProtocolType.Unknown) ;
+                hostName = match.Groups["host"].Value != "" ? match.Groups["host"].Value : hostName;
+                userName = match.Groups["user"].Value;
+                password = match.Groups["pass"].Value;
+                port = match.Groups["port"].Value != "" ? int.Parse(match.Groups["port"].Value) : port;
+            }
+
+
+ 
+            Action hasPort = () =>
+            {
                 disInvoke(() =>
                 {
-                    Console.WriteLine("port " + port.ToString());
-                    if (port == -1)
+ 
+                    if (port == 0)
                     {
-                        port = 53;
+                        vpnStatus = "error";
+                        vpnError = "לא מוצא פורט פעיל";
+                        return;
                     }
-                    startConnectingTime = DateTime.Now;
-                    service.Connect(host, port, Properties.Settings.Default.User, Properties.Settings.Default.Password);
+
+                    SettingsHost = hostName;
                 });
-            });
+
+                startConnectingTime = DateTime.Now;
+
+                tryService(() =>
+                {
+                    service.Connect(hostName, port, userName, password, proto);
+                });
+            };
+
+
+
+            int[] portsListUdp = { 26, 53, 123, 137, 1023, 1812, 2083, 5060 };
+            int[] portsListTcp = { 21, 25, 53, 80, 110, 143, 443, 1000, 1433, 3306, 5060 };
+
+            Action hasHost = () =>
+            {
+
+                if (proto == ProtocolType.Unknown || proto == ProtocolType.Tcp)
+                {
+                    nfaServers.findOpenPortTcp(hostName, portsListTcp.OrderBy(a => Guid.NewGuid()).ToArray(), (portTcp ) =>
+                    {
+
+                        if (portTcp > 0)
+                        {
+                            proto = ProtocolType.Tcp;
+                            port = portTcp;
+                            hasPort();
+                            return;
+                        }
+
+                        nfaServers.findOpenPortUdp(hostName, portsListUdp.OrderBy(a => Guid.NewGuid()).ToArray(), (portUdp) =>
+                        {
+                            if (portUdp > 0)
+                            {
+                                proto = ProtocolType.Udp;
+                                port = portUdp;
+                                hasPort();
+                                return;
+                            } 
+                        });
+                    });
+                }
+                else
+                {
+
+                    nfaServers.findOpenPortUdp(hostName, portsListUdp.OrderBy(a => Guid.NewGuid()).ToArray(), (portUdp) =>
+                    {
+                        if (portUdp > 0)
+                        {
+                            proto = ProtocolType.Udp;
+                            port = portUdp;
+                            hasPort();
+                            return;
+                        }
+                        nfaServers.findOpenPortTcp(hostName, portsListTcp.OrderBy(a => Guid.NewGuid()).ToArray(), (portTcp) =>
+                        {
+
+                            if (portTcp > 0)
+                            {
+                                proto = ProtocolType.Tcp;
+                                port = portTcp;
+                                hasPort();
+                                return;
+                            } 
+                        });
+                    });
+                }
+            };
+
+
+            if (hostName.Length > 2)
+            {
+                hasHost();
+            }
+            else
+            {
+
+                var list = nfaServers.GetServers();
+
+                if (list.Count == 0)
+                {
+                    vpnStatus = "error";
+                    vpnError = "לא נמצא שרת נטפרי";
+                    return;
+                }
+
+                var listHost = new List<string>();
+                foreach (var item in list)
+                {
+                    listHost.Add(item.Host);
+                }
+
+                nfaServers.findFastHost(listHost.ToArray(), (host, t) =>
+                {
+                    hostName = host;
+                    hasHost();
+                });
+            }
+
         }
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
         {
-            vpnStatus = "connecting";
-
-            if (Properties.Settings.Default.Host.Length > 2)
-            {
-                ConnectToHost(Properties.Settings.Default.Host);
-                return;
-            }
-
-            var list = nfaServers.GetServers();
-
-            if (list.Count == 0)
-            {
-                vpnStatus = "error";
-                vpnError = "לא נמצא שרת נטפרי";
-                return;
-            }
-
-            var listHost = new List<string>();
-            foreach (var item in list)
-            {
-                listHost.Add(item.Host);
-            }
-
-            nfaServers.findFastHost(listHost.ToArray(), (host, t) =>
-            {
-                ConnectToHost(host);
-            });
+            connectVpn();
         }
 
         private void btnDisconnect_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             new Thread(() =>
             {
-                service.Disconnect();
-                disInvoke(() =>
+                tryService(() =>
                 {
-                    vpnStatus = null;
+                    service.Disconnect();
                 });
             }).Start();
+
+            vpnStatus = null;
         }
 
         private void btnSelectServer_Click(object sender, RoutedEventArgs e)
@@ -430,19 +557,20 @@ namespace nfaTray
 
         private void btnSaveUserPass_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.User = iptUser.Text;
-            Properties.Settings.Default.Password = iptPassword.Text;
-            Properties.Settings.Default.Save();
+            //Properties.Settings.Default.User = iptUser.Text;
+            //Properties.Settings.Default.Password = iptPassword.Text;
+            //Properties.Settings.Default.Save();
 
-            TabControlWiz.SelectedIndex = Tabs.Main;
+            //TabControlWiz.SelectedIndex = Tabs.Main;
         }
 
-        private void changeUserPass_Click(object sender, RoutedEventArgs e)
+        private void changeVpnIdentifier_Click(object sender, RoutedEventArgs e)
         {
-            iptUser.Text = Properties.Settings.Default.User;
-            iptPassword.Text = Properties.Settings.Default.Password;
+            //iptUser.Text = Properties.Settings.Default.User;
+            //iptPassword.Text = Properties.Settings.Default.Password;
 
-            TabControlWiz.SelectedIndex = Tabs.UserPass;
+            vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+            TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
         }
 
         private void TabControlWiz_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -474,7 +602,37 @@ namespace nfaTray
             cboServers.SelectedIndex = -1;
         }
 
+        private void btnSaveVpnIdentifier_Click(object sender, RoutedEventArgs e)
+        {
+            Properties.Settings.Default.VpnIdentifier = vpnIdentifier.Text;
+            Properties.Settings.Default.Save();
+            TabControlWiz.SelectedIndex = Tabs.Main;
+        }
 
+
+        private void tryService(Action  work)
+        {
+            try
+            {
+                work();
+            }
+            catch (CommunicationException e)
+            {
+                ConnectToService();
+                if (e is System.ServiceModel.CommunicationObjectFaultedException)
+                {
+                    tryService(work);
+                }
+            }
+            catch (TimeoutException e)
+            {
+                ConnectToService();
+            }
+            catch (Exception e)
+            {
+                ConnectToService();
+            }
+        }
 
     }
 
@@ -484,4 +642,6 @@ namespace nfaTray
         public string Speed { get; set; }
         public nfaServer Server { get; set; }
     }
+
+ 
 }

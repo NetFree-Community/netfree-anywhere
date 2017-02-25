@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 using Heijden.DNS;
 using System.Net.Sockets;
 using System.Security.Cryptography;
+using System.IO;
 
 
 namespace nfaTray
@@ -26,7 +27,7 @@ namespace nfaTray
             var list = new List<string>();
 
             Resolver resolver = new Resolver();
-            Response response = resolver.Query("servers.ovpn.nfg.netfree.link", QType.TXT);
+            Response response = resolver.Query("servers.nfaw.netfree.link", QType.TXT);
             foreach (AnswerRR answerRR in response.Answers)
             {
                 var str = answerRR.RECORD.ToString();
@@ -75,7 +76,7 @@ namespace nfaTray
 
         }
 
-        public static void findOpenPort(string host, int[] ports, Action<int> callback)
+        public static void findOpenPortUdp(string host, int[] ports, Action<int> callback)
         {
             object lockAction = new Object();
             bool run = false;
@@ -128,6 +129,78 @@ namespace nfaTray
 
                     }
                     
+                    endCount++;
+                    if (endCount == ports.Length && !run)
+                    {
+                        run = true;
+                        callback.Invoke(-1);
+                    }
+
+                }).Start();
+            }
+
+
+        }
+
+        public static void findOpenPortTcp(string host, int[] ports, Action<int> callback)
+        {
+            object lockAction = new Object();
+            bool run = false;
+            int endCount = 0;
+            foreach (var port in ports)
+            {
+                new System.Threading.Thread(() =>
+                {
+                    try
+                    {
+                        using (var tcpClient = new TcpClient())
+                        {
+                            tcpClient.ReceiveTimeout = tcpClient.SendTimeout = 10000;
+                            tcpClient.Connect(host, port);
+ 
+ 
+                            Stream mainStream = tcpClient.GetStream();
+
+                            byte[] sendBytes = new byte[16];
+                            (new RNGCryptoServiceProvider()).GetBytes(sendBytes);
+                            //00 0e 38 00 5e 8b 46 41  65 71 87 00 00 00 00 00
+                            sendBytes[0] = 0;
+                            sendBytes[0+1] = 0x0e;
+                            sendBytes[0+2] = 0x38;
+                            sendBytes[9+2] = sendBytes[10+2] = sendBytes[11+2] = sendBytes[12+2] = sendBytes[13+2] = 0;
+
+                            mainStream.Write(sendBytes, 0, sendBytes.Length);
+
+                            StreamReader reader = new StreamReader(mainStream);
+
+                            char[] readByte = new char[30];
+
+                            int readCount = reader.Read(readByte,0,readByte.Length);
+
+
+                            if (readCount > 3 && readByte[2] == 0x40)
+                            {
+                                lock (lockAction)
+                                {
+                                    if (!run)
+                                    {
+                                        run = true;
+                                        callback.Invoke(port);
+                                    }
+                                }
+                            }
+
+                            reader.Close();
+                            mainStream.Close();
+                            tcpClient.Close();
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+
+                    }
+
                     endCount++;
                     if (endCount == ports.Length && !run)
                     {

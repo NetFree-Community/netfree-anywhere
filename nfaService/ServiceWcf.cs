@@ -23,9 +23,9 @@ internal class ServiceImplementation : INfaServiceNotify
         if (conn != null) conn.RemoveTray(chanel);
     }
 
-    public void Connect(string server, int port, string user, string pass)
+    public void Connect(string server, int port, string user, string pass , System.Net.Sockets.ProtocolType proto)
     {
-        if (conn != null) conn.Connect(server, port, user, pass);
+        if (conn != null) conn.Connect(server, port, user, pass, proto);
     }
 
     public void Disconnect()

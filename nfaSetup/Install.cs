@@ -6,6 +6,9 @@ using System.Reflection;
 using System.Threading;
 using System.Windows;
 using Ionic.Zip;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Runtime.ExceptionServices;
 
 namespace NfaSetup
 {
@@ -17,9 +20,9 @@ namespace NfaSetup
         static string ServiceDisplayName = "NetFreeAnywhere";
         static string PathDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"NetFree\NetFreeAnywhere");
         static string PathOpenVpn = Path.Combine(PathDir, @"openvpn\openvpn.exe");
-        static string PathTapInstaller = Path.Combine(PathDir, @"openvpn\driver\tapinstall.exe");
-        static string PathTapVista = Path.Combine(PathDir, @"openvpn\driver\tap\OemVista.inf");
-        static string PathTapWin2k = Path.Combine(PathDir, @"openvpn\driver\tap32\OemWin2k.inf");
+        static string PathTapInstaller32 = Path.Combine(PathDir, @"openvpn\driver\tapinstall.exe");
+        static string PathTapInstaller64 = Path.Combine(PathDir, @"openvpn\driver\tapinstall-64.exe");
+        static string PathTapInstaller = Path.Combine(PathDir, @"openvpn\driver\tap-windows-9.21.2.exe");       
         static string PathTray = Path.Combine(PathDir, "nfaTray.exe");
 
         Action<string> status;
@@ -148,6 +151,7 @@ namespace NfaSetup
             StartInfo.RedirectStandardError = true;
             StartInfo.UseShellExecute = false;
             StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            StartInfo.CreateNoWindow = true;
             Process p = Process.Start(StartInfo);
             p.BeginOutputReadLine();
             string sOut = "";
@@ -164,17 +168,29 @@ namespace NfaSetup
             return (i > 1);
         }
 
+ 
+        [DllImport("shell32.dll")]
+        private static extern bool SHGetSpecialFolderPath(IntPtr hwndOwner, [Out]StringBuilder lpszPath, int nFolder, bool fCreate);
+
+        static string GetSystemDirectory()
+        {
+            StringBuilder path = new StringBuilder(260);
+            SHGetSpecialFolderPath(IntPtr.Zero, path, 0x0029, false);
+            return path.ToString();
+        }
+
         private void InstallTap()
         {
 
             if (CheckVpnAdapter()) return;
-            
+
             Process p = new Process();
             p.StartInfo.FileName = PathTapInstaller;
-            p.StartInfo.Arguments = " install \"" + PathTapVista + "\" tap0901 ";
+            p.StartInfo.Arguments = " /S "; // " install \"" + pathTap + "\" tap0901 ";
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.UseShellExecute = false;
             p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            p.StartInfo.CreateNoWindow = true;
             p.Start();
             p.BeginOutputReadLine();
             string sOut = "";
@@ -229,4 +245,5 @@ namespace NfaSetup
         }
 
     }
+
 }

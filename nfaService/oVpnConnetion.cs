@@ -38,9 +38,9 @@ namespace nfaService
             TarysChanel.Remove(chanel);
         }
 
-        public void Connect(string ip, int port, string user, string pass){
+        public void Connect(string ip, int port, string user, string pass, System.Net.Sockets.ProtocolType proto){
             Console.WriteLine("get connect to: " + ip + ":" + port.ToString() );
-            this.oVpnConnetion.ConnectToVPN(ip, port, user, pass);
+            this.oVpnConnetion.ConnectToVPN(ip, port, user, pass, proto);
         }
 
         public void Disconnect()
@@ -96,7 +96,7 @@ namespace nfaService
             connectTread = null;
         }
 
-        public void ConnectToVPN(string ip, int port, string user, string pass)
+        public void ConnectToVPN(string ip, int port, string user, string pass,System.Net.Sockets.ProtocolType proto)
         {
 
             if(connectTread != null && connectTread.IsAlive){
@@ -106,14 +106,14 @@ namespace nfaService
 
             connectTread = new Thread(() =>
             {
-                ConnectToVPNWorker(ip, port, user, pass);
+                ConnectToVPNWorker(ip, port, user, pass,proto);
 
             });
 
             connectTread.Start();
         }
 
-        private void ConnectToVPNWorker(string ip, int port, string user, string pass)
+        private void ConnectToVPNWorker(string ip, int port, string user, string pass, System.Net.Sockets.ProtocolType proto)
         {
 
             string pathConfig = Path.GetTempFileName() + ".nfg-config.ovpn";
@@ -125,6 +125,8 @@ namespace nfaService
 
             ovpnConfig = ovpnConfig.Replace("{{remote_ip_port}}", ip + " " + port.ToString() );
             ovpnConfig = ovpnConfig.Replace("{{user_pass_path}}", pathPass.Replace(@"\",@"\\"));
+            ovpnConfig = ovpnConfig.Replace("{{proto}}", proto == ProtocolType.Udp ? "udp" : "tcp");
+            
             File.WriteAllText(pathConfig, ovpnConfig);
 
 
@@ -189,7 +191,7 @@ namespace nfaService
             //telnet.WriteLine("hold release");
             telnet.WriteLine("bytecount 1");
 
-
+            int countToDiconnect = 0;
             while (true)
             {
                 string line = telnet.GetLine();
@@ -202,21 +204,32 @@ namespace nfaService
                     }
                     Console.WriteLine(line);
                 }
-                else
-                {
-                    Thread.Sleep(50);
-                }
-                
+
                 if (goDiconnect)
                 {
-                    goDiconnect = false;
-                    telnet.WriteLine("signal SIGHUP");
-                    break;
+                    if (p.HasExited)
+                    {
+                        break;
+                    }
+                    else if (countToDiconnect > 10) //2s
+                    {
+                        break;
+                    }
+                    else if (countToDiconnect == 0)
+                    {
+                        telnet.WriteLine("signal SIGHUP");
+                    }
+
+                    countToDiconnect++;
                 }
-                
+
+                if (line == null) 
+                    Thread.Sleep(200);
             }
 
-            p.WaitForExit(2000);
+            p.WaitForExit(200);
+
+            goDiconnect = false;
 
             if (!p.HasExited)
             {

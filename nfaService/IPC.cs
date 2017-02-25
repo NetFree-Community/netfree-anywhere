@@ -17,7 +17,7 @@ public interface INfaServiceNotify
     void UnSubscribeClient();
 
     [OperationContract]
-    void Connect(string server, int port, string user, string pass);
+    void Connect(string server, int port, string user, string pass, System.Net.Sockets.ProtocolType protocol );
 
     [OperationContract]
     void Disconnect();
