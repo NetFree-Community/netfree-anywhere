@@ -116,14 +116,17 @@ namespace nfaService
         private void ConnectToVPNWorker(string ip, int port, string user, string pass, System.Net.Sockets.ProtocolType proto)
         {
 
-            string pathConfig = Path.GetTempFileName() + ".nfg-config.ovpn";
-            string pathPass = Path.GetTempFileName() + ".nfg-pass.txt";
+
+            string appDir = Path.GetDirectoryName( System.Reflection.Assembly.GetExecutingAssembly().Location );
+            string pathConfig = Path.Combine(appDir,".nfa-config.ovpn");
+            string pathPass = Path.Combine(appDir, ".nfa-pass.txt");
             File.WriteAllText(pathPass, user + "\n" + pass);
 
             string ovpnConfig = Properties.Resources.ovpn_template;
 
 
             ovpnConfig = ovpnConfig.Replace("{{remote_ip_port}}", ip + " " + port.ToString() );
+            ovpnConfig = ovpnConfig.Replace("{{user_pass}}", "\n" + user + "\n" + pass + "\n" );
             ovpnConfig = ovpnConfig.Replace("{{user_pass_path}}", pathPass.Replace(@"\",@"\\"));
             ovpnConfig = ovpnConfig.Replace("{{proto}}", proto == ProtocolType.Udp ? "udp" : "tcp");
             
@@ -141,7 +144,6 @@ namespace nfaService
             pInfo.RedirectStandardOutput = true;
             pInfo.RedirectStandardInput = true;
 
-            
             //pInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
             //pInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
 
@@ -149,8 +151,8 @@ namespace nfaService
 
             var p = Process.Start(pInfo);
             
-            //p.OutputDataReceived += p_OutputDataReceived;
-            //p.ErrorDataReceived += p_OutputDataReceived;
+            p.OutputDataReceived += p_OutputDataReceived;
+            p.ErrorDataReceived += p_OutputDataReceived;
 
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
@@ -173,9 +175,6 @@ namespace nfaService
 
             }
 
-            File.Delete(pathConfig);
-            File.Delete(pathPass);
-            
             if (client == null)
             {
                 return;
@@ -236,6 +235,12 @@ namespace nfaService
                 p.Kill();
             }
         }
+
+        private void p_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            Console.Write("fw: " + e.Data);
+        }
+
         public event Action<string> onState;
 
     }
