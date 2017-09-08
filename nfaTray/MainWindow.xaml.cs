@@ -398,16 +398,20 @@ namespace nfaTray
  
             Action hasPort = () =>
             {
-                disInvoke(() =>
+
+                if (port <= 0)
                 {
- 
-                    if (port == 0)
+                    disInvoke(() =>
                     {
                         vpnStatus = "error";
                         vpnError = "לא מוצא פורט פעיל";
-                        return;
-                    }
+                    });
 
+                    return;
+                }
+
+                disInvoke(() =>
+                {
                     SettingsHost = hostName;
                 });
 
@@ -446,9 +450,9 @@ namespace nfaTray
                             {
                                 proto = ProtocolType.Udp;
                                 port = portUdp;
-                                hasPort();
-                                return;
-                            } 
+                            }
+
+                            hasPort(); 
                         });
                     });
                 }
@@ -471,9 +475,9 @@ namespace nfaTray
                             {
                                 proto = ProtocolType.Tcp;
                                 port = portTcp;
-                                hasPort();
-                                return;
-                            } 
+                            }
+
+                            hasPort(); 
                         });
                     });
                 }
