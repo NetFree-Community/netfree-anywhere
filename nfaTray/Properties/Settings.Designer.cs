@@ -46,5 +46,17 @@ namespace nfaTray.Properties {
                 this["VpnIdentifier"] = value;
             }
         }
+                
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool AutoConnect {
+            get {
+                return ((bool)(this["AutoConnect"]));
+            }
+            set {
+                this["AutoConnect"] = value;
+            }
+        }
     }
 }
