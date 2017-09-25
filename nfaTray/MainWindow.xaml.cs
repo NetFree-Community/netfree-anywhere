@@ -118,8 +118,8 @@ namespace nfaTray
             {
                 TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
                 vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+                autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             }
-
 
             ni = new NotifyIcon();
             ni.Text = "NetFree Anywhere";
@@ -137,6 +137,10 @@ namespace nfaTray
             listServers = new ObservableCollection<ServerInfo>();
             cboServers.ItemsSource = listServers;
             cboServers.SelectionChanged += cboServers_SelectionChanged;
+
+            if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':')>-1)
+                connectVpn();
+
         }
 
 
@@ -574,6 +578,7 @@ namespace nfaTray
             //iptPassword.Text = Properties.Settings.Default.Password;
 
             vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+            autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
         }
 
@@ -609,6 +614,7 @@ namespace nfaTray
         private void btnSaveVpnIdentifier_Click(object sender, RoutedEventArgs e)
         {
             Properties.Settings.Default.VpnIdentifier = vpnIdentifier.Text;
+            Properties.Settings.Default.AutoConnect = autoConnect.IsChecked??false;
             Properties.Settings.Default.Save();
             TabControlWiz.SelectedIndex = Tabs.Main;
         }
