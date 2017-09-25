@@ -239,6 +239,10 @@
                         </TextBlock>
                         <Label Content="מזהה חיבור"  VerticalAlignment="Top"/>
                         <TextBox FlowDirection="LeftToRight" x:Name="vpnIdentifier" Height="28"   TextWrapping="Wrap" Text="" VerticalAlignment="Top"/>
+                        <WrapPanel Margin="0,10,0,0" >
+                                <CheckBox FlowDirection="LeftToRight" x:Name="autoConnect"/>
+                                <TextBlock FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות אוטומטית</TextBlock>
+                        </WrapPanel>
                         <Button  Name="btnSaveVpnIdentifier"  Click="btnSaveVpnIdentifier_Click" Content="שמור" HorizontalAlignment="Center" Height="26" Margin="0,10,0,0" Width="172"/>
 
                     </StackPanel>
