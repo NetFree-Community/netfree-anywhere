@@ -107,6 +107,13 @@ namespace nfaTray
         public MainWindow()
         {
 
+            if (Properties.Settings.Default.UpgradeRequired)
+            {
+                Properties.Settings.Default.Upgrade();
+                Properties.Settings.Default.UpgradeRequired = false;
+                Properties.Settings.Default.Save();
+            }
+
             InitializeComponent();
 
             TabControlWiz.Tag = Visibility.Hidden;
@@ -429,11 +436,18 @@ namespace nfaTray
 
 
 
-            int[] portsListUdp = { 26, 53, 123, 137, 1023, 1812, 2083, 5060 };
+            int[] portsListUdp = { 26, 53, 80 , 123, 137, 443, 1023, 1812, 2083, 5060 };
             int[] portsListTcp = { 21, 25, 53, 80, 110, 143, 443, 1000, 1433, 3306, 5060 };
 
             Action hasHost = () =>
             {
+
+                if (port > 0 && (proto == ProtocolType.Tcp || proto == ProtocolType.Udp))
+                {
+                    hasPort();
+                    return;
+                }
+
 
                 if (proto == ProtocolType.Unknown || proto == ProtocolType.Tcp)
                 {

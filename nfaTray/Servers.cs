@@ -96,8 +96,8 @@ namespace nfaTray
                             byte[] receiveBytes = null;
                             IPEndPoint nfReceive = null;
                             nfReceive = new IPEndPoint(new IPAddress(new byte[] { 0, 0, 0, 0 }), 0);
-                            udpClient.Client.ReceiveTimeout = 2000;
-
+                            udpClient.Client.SendTimeout = udpClient.Client.ReceiveTimeout = 2000;
+                            
                             byte[] sendBytes = new byte[14];
                             (new RNGCryptoServiceProvider()).GetBytes(sendBytes);
                             sendBytes[0] = 0x38;
@@ -129,11 +129,15 @@ namespace nfaTray
 
                     }
                     
-                    endCount++;
-                    if (endCount == ports.Length && !run)
+
+                    lock (lockAction)
                     {
-                        run = true;
-                        callback.Invoke(-1);
+                        endCount++;
+                        if (endCount == ports.Length && !run)
+                        {
+                            run = true;
+                            callback.Invoke(-1);
+                        }
                     }
 
                 }).Start();
@@ -155,7 +159,7 @@ namespace nfaTray
                     {
                         using (var tcpClient = new TcpClient())
                         {
-                            tcpClient.ReceiveTimeout = tcpClient.SendTimeout = 10000;
+                            tcpClient.ReceiveTimeout = tcpClient.SendTimeout = 5000;
                             tcpClient.Connect(host, port);
  
  
@@ -201,13 +205,15 @@ namespace nfaTray
 
                     }
 
-                    endCount++;
-                    if (endCount == ports.Length && !run)
+                    lock (lockAction)
                     {
-                        run = true;
-                        callback.Invoke(-1);
+                        endCount++;
+                        if (endCount == ports.Length && !run)
+                        {
+                            run = true;
+                            callback.Invoke(-1);
+                        }
                     }
-
                 }).Start();
             }
 
