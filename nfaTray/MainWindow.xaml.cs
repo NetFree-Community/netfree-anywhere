@@ -145,8 +145,28 @@ namespace nfaTray
             cboServers.ItemsSource = listServers;
             cboServers.SelectionChanged += cboServers_SelectionChanged;
 
-            if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':')>-1)
+            if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':') > -1)
+            {
                 connectVpn();
+                Thread t = new Thread(() =>
+                    {
+                        for (int j = 0; j == j; j++)
+                        {
+                            Thread.Sleep(2000);
+                            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                            {
+                                Thread.Sleep(3000);
+                                connectVpn();
+                            }
+                        }
+                    });
+                for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                {
+                    Thread.Sleep(3000);
+                    connectVpn();
+                }
+            }
+
 
         }
 
@@ -293,6 +313,15 @@ namespace nfaTray
                             service.Disconnect();
                         });
                     }).Start();
+                    //if (Properties.Settings.Default.AutoConnect)
+                    //{
+                    //    for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                    //    {
+                    //        Thread.Sleep(3000);
+                    //        connectVpn();
+                    //    }
+                    //}
+
                 }
             }
             if (state.StartsWith(">STATE:"))
@@ -391,6 +420,7 @@ namespace nfaTray
             string password = "";
             int port = 0;
 
+            Properties.Settings.Default.VpnIdentifier.Replace(" ", "");
 
             Regex VpnIdentifierRegex = new Regex("^((?<proto>tcp|udp)://)?(?<user>[^:]+):(?<pass>[^@]+)(@(?<host>[^:]+)(:(?<port>\\d+))?)?");
 
@@ -398,7 +428,7 @@ namespace nfaTray
 
             if (match.Success)
             {
-                proto = match.Groups["proto"].Value == "tcp" ? ProtocolType.Tcp : (match.Groups["proto"].Value == "udp" ? ProtocolType.Udp : ProtocolType.Unknown) ;
+                proto = match.Groups["proto"].Value == "tcp" ? ProtocolType.Tcp : (match.Groups["proto"].Value == "udp" ? ProtocolType.Udp : ProtocolType.Unspecified) ;
                 hostName = match.Groups["host"].Value != "" ? match.Groups["host"].Value : hostName;
                 userName = match.Groups["user"].Value;
                 password = match.Groups["pass"].Value;
@@ -529,6 +559,10 @@ namespace nfaTray
                     hostName = host;
                     hasHost();
                 });
+            }
+            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+            {
+                ConnectToService();
             }
 
         }

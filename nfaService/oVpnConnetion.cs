@@ -115,126 +115,135 @@ namespace nfaService
 
         private void ConnectToVPNWorker(string ip, int port, string user, string pass, System.Net.Sockets.ProtocolType proto)
         {
-
-
-            string appDir = Path.GetDirectoryName( System.Reflection.Assembly.GetExecutingAssembly().Location );
-            string pathConfig = Path.Combine(appDir,".nfa-config.ovpn");
-            string pathPass = Path.Combine(appDir, ".nfa-pass.txt");
-            File.WriteAllText(pathPass, user + "\n" + pass);
-
-            string ovpnConfig = Properties.Resources.ovpn_template;
-
-
-            ovpnConfig = ovpnConfig.Replace("{{remote_ip_port}}", ip + " " + port.ToString() );
-            ovpnConfig = ovpnConfig.Replace("{{user_pass}}", "\n" + user + "\n" + pass + "\n" );
-            ovpnConfig = ovpnConfig.Replace("{{user_pass_path}}", pathPass.Replace(@"\",@"\\"));
-            ovpnConfig = ovpnConfig.Replace("{{proto}}", proto == ProtocolType.Udp ? "udp" : "tcp");
-            
-            File.WriteAllText(pathConfig, ovpnConfig);
-
-
-            var pInfo  = new ProcessStartInfo();
-            
-            //pInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            pInfo.FileName =  Path.Combine(dirName , @"openvpn\openvpn.exe");
-            pInfo.Arguments = "\"" + pathConfig + "\"";
-
-            
-            pInfo.RedirectStandardError = true;
-            pInfo.RedirectStandardOutput = true;
-            pInfo.RedirectStandardInput = true;
-
-            //pInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
-            //pInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
-
-            pInfo.UseShellExecute = false;
-
-            var p = Process.Start(pInfo);
-            
-            p.OutputDataReceived += p_OutputDataReceived;
-            p.ErrorDataReceived += p_OutputDataReceived;
-
-            p.BeginOutputReadLine();
-            p.BeginErrorReadLine();
-            
-            Thread.Sleep(100);
-
-            TcpClient client = null;
-            var tryCount = 5;
-
-            while (client == null && tryCount-- > 0)
+            if (proto == ProtocolType.Unspecified)
             {
-                try
+                Process.Start("rasdial.exe", ip + port + " " + user + " " + pass + " ");
+
+            }
+            else
+            {
+                string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                string pathConfig = Path.Combine(appDir, ".nfa-config.ovpn");
+                string pathPass = Path.Combine(appDir, ".nfa-pass.txt");
+                File.WriteAllText(pathPass, user + "\n" + pass);
+
+                string ovpnConfig = Properties.Resources.ovpn_template;
+
+
+                ovpnConfig = ovpnConfig.Replace("{{remote_ip_port}}", ip + " " + port.ToString());
+                ovpnConfig = ovpnConfig.Replace("{{user_pass}}", "\n" + user + "\n" + pass + "\n");
+                ovpnConfig = ovpnConfig.Replace("{{user_pass_path}}", pathPass.Replace(@"\", @"\\"));
+                ovpnConfig = ovpnConfig.Replace("{{proto}}", proto == ProtocolType.Udp ? "udp" : "tcp");
+
+                File.WriteAllText(pathConfig, ovpnConfig);
+
+
+                var pInfo = new ProcessStartInfo();
+
+                //pInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                pInfo.FileName = Path.Combine(dirName, @"openvpn\openvpn.exe");
+                pInfo.Arguments = "\"" + pathConfig + "\"";
+
+
+                pInfo.RedirectStandardError = true;
+                pInfo.RedirectStandardOutput = true;
+                pInfo.RedirectStandardInput = true;
+
+                //pInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+                //pInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
+
+                pInfo.UseShellExecute = false;
+
+                var p = Process.Start(pInfo);
+
+                p.OutputDataReceived += p_OutputDataReceived;
+                p.ErrorDataReceived += p_OutputDataReceived;
+
+                p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
+
+                Thread.Sleep(100);
+
+                TcpClient client = null;
+                var tryCount = 5;
+
+                while (client == null && tryCount-- > 0)
                 {
-                    client = new TcpClient("127.0.0.1", 7000);
+                    try
+                    {
+                        client = new TcpClient("127.0.0.1", 7000);
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(100);
+                    }
+
                 }
-                catch (Exception)
+
+                if (client == null)
                 {
-                    Thread.Sleep(100);
+                    return;
                 }
 
-            }
+                var stream = client.GetStream();
 
-            if (client == null)
-            {
-                return;
-            }
-            
-            var stream = client.GetStream();
+                var telnet = new Telnet(stream);
 
-            var telnet = new Telnet(stream);
-            
-            telnet.WriteLine("state on");
-            //telnet.WriteLine("log all on");
-            //telnet.WriteLine("hold off");
-            //telnet.WriteLine("hold release");
-            telnet.WriteLine("bytecount 1");
+                telnet.WriteLine("state on");
+                //telnet.WriteLine("log all on");
+                //telnet.WriteLine("hold off");
+                //telnet.WriteLine("hold release");
+                telnet.WriteLine("bytecount 1");
 
-            int countToDiconnect = 0;
-            while (true)
-            {
-                string line = telnet.GetLine();
-               
-               
-                if(line != null){
-                    if (onState != null && line.StartsWith(">"))
-                    {
-                        onState.Invoke(line);
-                    }
-                    Console.WriteLine(line);
-                }
-
-                if (goDiconnect)
+                int countToDiconnect = 0;
+                while (true)
                 {
-                    if (p.HasExited)
+                    string line = telnet.GetLine();
+
+
+                    if (line != null)
                     {
-                        break;
-                    }
-                    else if (countToDiconnect > 10) //2s
-                    {
-                        break;
-                    }
-                    else if (countToDiconnect == 0)
-                    {
-                        telnet.WriteLine("signal SIGHUP");
+                        if (onState != null && line.StartsWith(">"))
+                        {
+                            onState.Invoke(line);
+                        }
+                        Console.WriteLine(line);
                     }
 
-                    countToDiconnect++;
+                    if (goDiconnect)
+                    {
+                        if (p.HasExited)
+                        {
+                            break;
+                        }
+                        else if (countToDiconnect > 10) //2s
+                        {
+                            break;
+                        }
+                        else if (countToDiconnect == 0)
+                        {
+                            telnet.WriteLine("signal SIGHUP");
+                        }
+
+                        countToDiconnect++;
+                    }
+
+                    if (line == null)
+                        Thread.Sleep(200);
                 }
 
-                if (line == null) 
-                    Thread.Sleep(200);
+                p.WaitForExit(200);
+
+                goDiconnect = false;
+
+                if (!p.HasExited)
+                {
+                    p.Kill();
+                }
             }
 
-            p.WaitForExit(200);
-
-            goDiconnect = false;
-
-            if (!p.HasExited)
-            {
-                p.Kill();
-            }
         }
+
 
         private void p_OutputDataReceived(object sender, DataReceivedEventArgs e)
         {
@@ -242,6 +251,7 @@ namespace nfaService
         }
 
         public event Action<string> onState;
+        
 
     }
 
