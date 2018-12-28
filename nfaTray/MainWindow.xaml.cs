@@ -114,9 +114,24 @@ namespace nfaTray
             public const int UserPass = 2;
             public const int VpnIdentifier = 3;
         };
+        private bool _vpnIdentifierViewed;
+
+        public bool VpnIdentifierViewed
+        {
+            get
+            {
+                return _vpnIdentifierViewed;
+            }
+            set
+            {
+                _vpnIdentifierViewed = value;
+            }
+        }
+        
 
         public MainWindow()
         {
+            VpnIdentifierViewed = false;
 
             if (Properties.Settings.Default.UpgradeRequired)
             {
@@ -135,7 +150,7 @@ namespace nfaTray
             if (Properties.Settings.Default.VpnIdentifier.IndexOf(':') == -1)
             {
                 TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
-                vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+                vpnIdentifierText.Text = Properties.Settings.Default.VpnIdentifier;
                 autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             }
 
@@ -620,7 +635,7 @@ namespace nfaTray
             //iptUser.Text = Properties.Settings.Default.User;
             //iptPassword.Text = Properties.Settings.Default.Password;
 
-            vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+            vpnIdentifierPass.Password = Properties.Settings.Default.VpnIdentifier;
             autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
         }
@@ -656,7 +671,11 @@ namespace nfaTray
 
         private void btnSaveVpnIdentifier_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.VpnIdentifier = vpnIdentifier.Text;
+            if (!VpnIdentifierViewed)
+            {
+                vpnIdentifierText.Text = vpnIdentifierPass.Password;
+            }
+            Properties.Settings.Default.VpnIdentifier = vpnIdentifierText.Text;
             Properties.Settings.Default.AutoConnect = autoConnect.IsChecked??false;
             Properties.Settings.Default.Save();
             TabControlWiz.SelectedIndex = Tabs.Main;
@@ -687,6 +706,25 @@ namespace nfaTray
             }
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (!VpnIdentifierViewed)
+            {
+                vpnIdentifierText.Text = vpnIdentifierPass.Password;
+                vpnIdentifierPass.Visibility = Visibility.Collapsed;
+                vpnIdentifierText.Visibility = Visibility.Visible;
+                button.Content = "הסתר";
+                VpnIdentifierViewed = true;
+            }
+            else
+            {
+                vpnIdentifierPass.Password = vpnIdentifierText.Text;
+                vpnIdentifierPass.Visibility = Visibility.Visible;
+                vpnIdentifierText.Visibility = Visibility.Collapsed;
+                button.Content = "הצג";
+                VpnIdentifierViewed = false;
+            }
+        }
     }
 
     public class ServerInfo
