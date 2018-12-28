@@ -88,6 +88,17 @@ namespace nfaTray
                 _vpnError = value;
                 vpnStatus = (value == null) ? null : "error";
                 OnPropertyChanged("vpnError");
+                if (value != null)
+                {
+                    Thread t = new Thread(() =>
+                    {
+                            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                            {
+                                connectVpn();
+                                Thread.Sleep(5000);
+                            }
+                    });
+                }
             }
         }
         public string ipAddress { get; set; }
@@ -148,23 +159,7 @@ namespace nfaTray
             if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':') > -1)
             {
                 connectVpn();
-                Thread t = new Thread(() =>
-                    {
-                        for (int j = 0; j == j; j++)
-                        {
-                            Thread.Sleep(2000);
-                            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
-                            {
-                                Thread.Sleep(3000);
-                                connectVpn();
-                            }
-                        }
-                    });
-                for (int i = 0; i < 3 && vpnStatus == "error"; i++)
-                {
-                    Thread.Sleep(3000);
-                    connectVpn();
-                }
+
             }
 
 
