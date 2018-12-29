@@ -249,6 +249,8 @@
                             <CheckBox FlowDirection="LeftToRight" x:Name="autoConnect"/>
                             <TextBlock FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות אוטומטית</TextBlock>
                             <Button x:Name="button" Content="הצג" Margin="195,-15,0,0" Click="Button_Click" Width="37"/>
+                            <CheckBox FlowDirection="LeftToRight" x:Name="udpProtocol"/>
+                            <TextBlock FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות באמצעות udp</TextBlock>
                         </WrapPanel>
                         <Button  Name="btnSaveVpnIdentifier"  Click="btnSaveVpnIdentifier_Click" Content="שמור" HorizontalAlignment="Center" Height="26" Margin="0,10,0,0" Width="172"/>
 

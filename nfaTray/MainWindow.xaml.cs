@@ -225,7 +225,8 @@ namespace nfaTray
                 service.SubscribeClient();
             }
             catch (Exception)
-            { 
+            {
+                vpnError = "לא ידוע";
             }
             
             
@@ -423,7 +424,6 @@ namespace nfaTray
             vpnStatus = "connecting";
 
 
-
             ProtocolType proto = ProtocolType.Unknown;
             string hostName = Properties.Settings.Default.Host;
             string userName = "";
@@ -438,13 +438,14 @@ namespace nfaTray
 
             if (match.Success)
             {
-                proto = match.Groups["proto"].Value == "tcp" ? ProtocolType.Tcp : (match.Groups["proto"].Value == "udp" ? ProtocolType.Udp : ProtocolType.Unspecified) ;
+                proto = match.Groups["proto"].Value == "tcp" ? ProtocolType.Tcp : (match.Groups["proto"].Value == "udp" ? ProtocolType.Udp : ProtocolType.Unknown) ;
                 hostName = match.Groups["host"].Value != "" ? match.Groups["host"].Value : hostName;
                 userName = match.Groups["user"].Value;
                 password = match.Groups["pass"].Value;
                 port = match.Groups["port"].Value != "" ? int.Parse(match.Groups["port"].Value) : port;
             }
-
+            if ((bool)udpProtocol.IsChecked)
+                proto = ProtocolType.Udp;
 
  
             Action hasPort = () =>
@@ -676,7 +677,8 @@ namespace nfaTray
                 vpnIdentifierText.Text = vpnIdentifierPass.Password;
             }
             Properties.Settings.Default.VpnIdentifier = vpnIdentifierText.Text;
-            Properties.Settings.Default.AutoConnect = autoConnect.IsChecked??false;
+            Properties.Settings.Default.AutoConnect = autoConnect.IsChecked ?? false;
+            Properties.Settings.Default.udpProtocol = udpProtocol.IsChecked ?? false;
             Properties.Settings.Default.Save();
             TabControlWiz.SelectedIndex = Tabs.Main;
         }
