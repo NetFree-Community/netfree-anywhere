@@ -115,13 +115,6 @@ namespace nfaService
 
         private void ConnectToVPNWorker(string ip, int port, string user, string pass, System.Net.Sockets.ProtocolType proto)
         {
-            if (proto == ProtocolType.Unspecified)
-            {
-                Process.Start("rasdial.exe", ip + port + " " + user + " " + pass + " ");
-
-            }
-            else
-            {
                 string appDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 string pathConfig = Path.Combine(appDir, ".nfa-config.ovpn");
                 string pathPass = Path.Combine(appDir, ".nfa-pass.txt");
@@ -240,7 +233,7 @@ namespace nfaService
                 {
                     p.Kill();
                 }
-            }
+            
 
         }
 
