@@ -4,13 +4,13 @@
         xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero" x:Class="nfaTray.MainWindow"
         Title="MainWindow" Height="400" Width="250"
         WindowStyle="None" 
-        AllowsTransparency="True" Background="Transparent" FlowDirection="RightToLeft" ShowInTaskbar="False"
+        AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False"
     
         Deactivated="Window_Deactivated"
         Topmost="True"
-        BorderThickness="1" BorderBrush="#FF76A6CA"
+        BorderThickness="1" BorderBrush="#FF76A6CA" FlowDirection="RightToLeft"
     >
-    <Grid  >
+    <Grid FlowDirection="RightToLeft" x:Name="mainGrid" >
         <Grid.RowDefinitions>
             <RowDefinition Height="35"/>
             <RowDefinition Height="*"/>
@@ -177,6 +177,7 @@
                     <StackPanel Margin="7" Grid.ColumnSpan="3">
                         <Button Name="changeUserPass" Click="changeVpnIdentifier_Click" Content="שנה מזהה חיבור" Height="24" Margin="3" VerticalAlignment="Top"  />
                         <Button Visibility="Visible" Name="selectServer" Click="selectServer_Click" Content="בחר שרת" Height="24" Margin="3" VerticalAlignment="Top" />
+                        <Button Visibility="Visible" Name="selectLanguage" Content="בחר שפה" Height="24" Margin="3" VerticalAlignment="Top" Click="SelectLanguage_Click" />
                     </StackPanel>
 
                 </Grid>
@@ -238,23 +239,44 @@
             </TabItem>
             <TabItem Header="מזהה">
                 <Grid Background="White" Margin="-4">
-                    <StackPanel Margin="10,10,10,10" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="13*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="10,10,10,10" Grid.ColumnSpan="2" >
                         <TextBlock>
 
                         </TextBlock>
-                        <Label Content="מזהה חיבור"  VerticalAlignment="Top"/>
+                        <Label Content="מזהה חיבור"  VerticalAlignment="Top" x:Name="ConnectIDLabel"/>
                         <TextBox FlowDirection="LeftToRight" x:Name="vpnIdentifierText" Height="28" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Visibility="Collapsed"/>
                         <PasswordBox FlowDirection="LeftToRight" x:Name="vpnIdentifierPass" Height="28" VerticalAlignment="Top"/>
                         <WrapPanel Margin="0,10,0,0" >
                             <CheckBox FlowDirection="LeftToRight" x:Name="autoConnect"/>
-                            <TextBlock FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות אוטומטית</TextBlock>
+                            <TextBlock x:Name="AutoConnectLabel" FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות אוטומטית</TextBlock>
                             <Button x:Name="button" Content="הצג" Margin="195,-15,0,0" Click="Button_Click" Width="37"/>
                             <CheckBox FlowDirection="LeftToRight" x:Name="udpProtocol"/>
-                            <TextBlock FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות באמצעות udp</TextBlock>
+                            <TextBlock x:Name="udpProtocolLabel" FlowDirection="RightToLeft" Margin="5,0,0,0">התחברות באמצעות udp</TextBlock>
                         </WrapPanel>
                         <Button  Name="btnSaveVpnIdentifier"  Click="btnSaveVpnIdentifier_Click" Content="שמור" HorizontalAlignment="Center" Height="26" Margin="0,10,0,0" Width="172"/>
 
                     </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="שפה">
+                <Grid Background="White" Margin="-4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="55*"/>
+                        <ColumnDefinition Width="71*"/>
+                    </Grid.ColumnDefinitions>
+                    <ListBox Grid.ColumnSpan="2">
+                        <ListBoxItem x:Name="heItem" Content="עברית" Height="58" FontSize="18" IsSelected="True" FlowDirection="RightToLeft"/>
+                        <ListBoxItem x:Name="enItem" Content="English" Height="58" FontSize="18" FlowDirection="LeftToRight"/>
+                        <ListBoxItem x:Name="idItem" Content="אידיש" Height="58" FontSize="18" FlowDirection="RightToLeft"/>
+                        <ListBoxItem x:Name="spItem" Content="Spanish" Height="58" FontSize="18" FlowDirection="LeftToRight"/>
+                        <ListBoxItem x:Name="ruItem" Content="Русский" Height="58" FontSize="18" FlowDirection="LeftToRight"/>
+                        <ListBoxItem x:Name="esItem" Content="Español" Height="58" FontSize="18" FlowDirection="LeftToRight"/>
+                    </ListBox>
+                    <Button x:Name="button1" Content="שמור שפה" Margin="83,336,80,10" Grid.ColumnSpan="2" Click="Button1_Click"/>
                 </Grid>
             </TabItem>
         </TabControl>

@@ -29,7 +29,21 @@ namespace nfaTray
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-
+        string showText = "הצג";
+        string hideText = "הסתר";
+        string il = "ישראל";
+        string uk = "לונדון";
+        string us = "ארצות הברית";
+        string ar = "ארגנטינה";
+        public enum Languages
+        {
+            Hebrew = 1,
+            English = 2,
+            Idish = 3,
+            Spanish = 4,
+            Russian = 5,
+            Espanol = 6
+        }
         static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
         static string SizeSuffix(Int64 value)
         {
@@ -113,6 +127,7 @@ namespace nfaTray
             public const int Servers = 1;
             public const int UserPass = 2;
             public const int VpnIdentifier = 3;
+            public const int Languages = 4;
         };
         private bool _vpnIdentifierViewed;
 
@@ -160,7 +175,7 @@ namespace nfaTray
             ni.Icon = nfaTray.Properties.Resources.NetFreeAnywareLogoSq;
             ni.Click += ni_Click;
 
-
+            SetLanguage((Languages)Properties.Settings.Default.Language);
             ConnectToService();
 
 
@@ -250,9 +265,10 @@ namespace nfaTray
             var list = nfaServers.GetServers();
 
             var countryMap = new Dictionary<string, Country>();
-            countryMap["il"] = new Country { Name = "ישראל" };
-            countryMap["uk"] = new Country { Name = "לונדון" };
-            countryMap["us"] = new Country { Name = "ארצות הברית" };
+            countryMap["il"] = new Country { Name = il };
+            countryMap["uk"] = new Country { Name = uk };
+            countryMap["us"] = new Country { Name = us };
+            countryMap["ar"] = new Country { Name = ar };
 
             listServers.Clear();
             foreach (var item in list)
@@ -715,7 +731,7 @@ namespace nfaTray
                 vpnIdentifierText.Text = vpnIdentifierPass.Password;
                 vpnIdentifierPass.Visibility = Visibility.Collapsed;
                 vpnIdentifierText.Visibility = Visibility.Visible;
-                button.Content = "הסתר";
+                button.Content = hideText;
                 VpnIdentifierViewed = true;
             }
             else
@@ -723,9 +739,135 @@ namespace nfaTray
                 vpnIdentifierPass.Password = vpnIdentifierText.Text;
                 vpnIdentifierPass.Visibility = Visibility.Visible;
                 vpnIdentifierText.Visibility = Visibility.Collapsed;
-                button.Content = "הצג";
+                button.Content = showText;
                 VpnIdentifierViewed = false;
             }
+        }
+        public void SetLanguage(Languages lang)
+        {
+            switch (lang)
+            {
+                case Languages.Hebrew:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                    // Main
+                    btnConnect.Content = "התחבר";
+                    btnDisconnect.Content = "התנתק";
+                    // Change Connect ID
+                    changeUserPass.Content = "שנה מזהה חיבור";
+                    ConnectIDLabel.Content = "מזהה חיבור";
+                    AutoConnectLabel.Text = "התחברות אוטומטית";
+                    udpProtocolLabel.Text = "התחברות באמצעות udp";
+                    showText = "הצג";
+                    hideText = "הסתר";
+                    button.Content = "הצג";
+                    btnSaveVpnIdentifier.Content = "שמור";
+                    // Select server
+                    selectServer.Content = "בחר שרת";
+                    autoSelect.Content = "בחר שרת אוטומטית";
+                    il = "ישראל";
+                    uk = "לונדון";
+                    us = "ארצות הברית";
+                    ar = "ארגנטינה";
+                    // Language
+                    selectLanguage.Content = "בחר שפה";
+                    button1.Content = "שמור שפה";
+                    break;
+                case Languages.English:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    btnConnect.Content = "Connect";
+                    btnDisconnect.Content = "Disconnect";
+                    // Change Connect ID
+                    changeUserPass.Content = "Change Connect ID";
+                    ConnectIDLabel.Content = "Connect ID";
+                    AutoConnectLabel.Text = "Automatic Connect";
+                    udpProtocolLabel.Text = "Connect with udp";
+                    showText = "Show";
+                    hideText = "Hide";
+                    button.Content = "Show";
+                    btnSaveVpnIdentifier.Content = "Save";
+                    // Select server
+                    selectServer.Content = "Select server";
+                    autoSelect.Content = "Selct server Automatically";
+                    il = "Israel";
+                    uk = "London";
+                    us = "United States";
+                    ar = "Argentina";
+                    // Language
+                    selectLanguage.Content = "Select language";
+                    button1.Content = "Save language";
+                    break;
+                case Languages.Idish:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                    // Main
+                    btnConnect.Content = "פארבינד זיך";
+                    btnDisconnect.Content = "בינד אפ";
+                    // Change Connect ID
+                    changeUserPass.Content = "טויש די קאַנעקשאַן שייַן";
+                    ConnectIDLabel.Content = "קאַנעקשאַן שייַן";
+                    AutoConnectLabel.Text = "אָטאַמאַטיש פארבינדונג";
+                    udpProtocolLabel.Text = "פארבינדונג דורך udp";
+                    showText = "וויזן";
+                    hideText = "באַהאַלטן";
+                    button.Content = "וויזן";
+                    btnSaveVpnIdentifier.Content = "היט";
+                    // Select server
+                    selectServer.Content = "קלייַב א סערווירער";
+                    autoSelect.Content = "קלייַב א סערווירער אָטאָמאַטיש";
+                    il = "ישראל";
+                    uk = "לאָנדאָן";
+                    us = "אמעריקע";
+                    ar = "ארגענטינע";
+                    // Language
+                    selectLanguage.Content = "טויש א שפּראַך";
+                    button1.Content = "היט די שפראַך";
+                    break;
+                case Languages.Spanish:
+                    break;
+                case Languages.Russian:
+                    break;
+                case Languages.Espanol:
+                    break;
+                default:
+                    break;
+            }
+            
+
+        }
+
+        private void Button1_Click(object sender, RoutedEventArgs e)
+        {
+            if (heItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 1;
+            }
+            else if (enItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 2;
+            }
+            else if (idItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 3;
+            }
+            else if (spItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 4;
+            }
+            else if (ruItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 5;
+            }
+            else if (esItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 6;
+            }
+            SetLanguage((Languages)Properties.Settings.Default.Language);
+            TabControlWiz.SelectedIndex = Tabs.Main;
+        }
+
+        private void SelectLanguage_Click(object sender, RoutedEventArgs e)
+        {
+            TabControlWiz.SelectedIndex = Tabs.Languages;
         }
     }
 
