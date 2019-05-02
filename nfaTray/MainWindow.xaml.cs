@@ -29,6 +29,7 @@ namespace nfaTray
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        string msText = "ms";
         string showText = "הצג";
         string hideText = "הסתר";
         string il = "ישראל";
@@ -447,6 +448,14 @@ namespace nfaTray
             int port = 0;
 
             Properties.Settings.Default.VpnIdentifier.Replace(" ", "");
+            for (int i = 0; i < Properties.Settings.Default.VpnIdentifier.Length; i++)
+            {
+                if (char.IsControl(Properties.Settings.Default.VpnIdentifier.ToCharArray()[i]))
+                {
+                    Properties.Settings.Default.VpnIdentifier.Replace(Properties.Settings.Default.VpnIdentifier.ToCharArray()[i].ToString(), "");
+                }
+            }
+
 
             Regex VpnIdentifierRegex = new Regex("^((?<proto>tcp|udp)://)?(?<user>[^:]+):(?<pass>[^@]+)(@(?<host>[^:]+)(:(?<port>\\d+))?)?");
 
@@ -750,6 +759,7 @@ namespace nfaTray
                 case Languages.Hebrew:
                     mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
                     // Main
+                    ni.Text = "NetFree Anywhere";
                     btnConnect.Content = "התחבר";
                     btnDisconnect.Content = "התנתק";
                     // Change Connect ID
@@ -775,58 +785,135 @@ namespace nfaTray
                 case Languages.English:
                     mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
                     // Main
+                    ni.Text = "NetFree Anywhere";
                     btnConnect.Content = "Connect";
                     btnDisconnect.Content = "Disconnect";
                     // Change Connect ID
-                    changeUserPass.Content = "Change Connect ID";
-                    ConnectIDLabel.Content = "Connect ID";
-                    AutoConnectLabel.Text = "Automatic Connect";
-                    udpProtocolLabel.Text = "Connect with udp";
+                    changeUserPass.Content = "Change Connection ID";
+                    ConnectIDLabel.Content = "Connection ID";
+                    AutoConnectLabel.Text = "Connect Automatically";
+                    udpProtocolLabel.Text = "Connect via UDP";
                     showText = "Show";
                     hideText = "Hide";
                     button.Content = "Show";
                     btnSaveVpnIdentifier.Content = "Save";
                     // Select server
-                    selectServer.Content = "Select server";
+                    selectServer.Content = "Select a Server";
                     autoSelect.Content = "Selct server Automatically";
                     il = "Israel";
                     uk = "London";
                     us = "United States";
                     ar = "Argentina";
                     // Language
-                    selectLanguage.Content = "Select language";
+                    selectLanguage.Content = "Change language";
                     button1.Content = "Save language";
                     break;
                 case Languages.Idish:
                     mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
                     // Main
+                    ni.Text = "NetFree Anywhere";
                     btnConnect.Content = "פארבינד זיך";
-                    btnDisconnect.Content = "בינד אפ";
+                    btnDisconnect.Content = "האק אפ";
                     // Change Connect ID
-                    changeUserPass.Content = "טויש די קאַנעקשאַן שייַן";
-                    ConnectIDLabel.Content = "קאַנעקשאַן שייַן";
-                    AutoConnectLabel.Text = "אָטאַמאַטיש פארבינדונג";
-                    udpProtocolLabel.Text = "פארבינדונג דורך udp";
-                    showText = "וויזן";
-                    hideText = "באַהאַלטן";
-                    button.Content = "וויזן";
-                    btnSaveVpnIdentifier.Content = "היט";
+                    changeUserPass.Content = "טויש די קאַנעקשאַן דעטאלן";
+                    ConnectIDLabel.Content = "קאַנעקשאַן דעטאלן";
+                    AutoConnectLabel.Text = "זיך צו פארבינדן אָטאַמאַטיש";
+                    udpProtocolLabel.Text = "פארבינדן דורך udp";
+                    showText = "בּאַווייז";
+                    hideText = "בּאַהאַלט";
+                    button.Content = "בּאַווייז";
+                    btnSaveVpnIdentifier.Content = "געדענק די אינפאָרמאַציע";
                     // Select server
-                    selectServer.Content = "קלייַב א סערווירער";
-                    autoSelect.Content = "קלייַב א סערווירער אָטאָמאַטיש";
-                    il = "ישראל";
+                    selectServer.Content = "וועל אויס א סערווער";
+                    autoSelect.Content = "וועל א סערווער אָטאָמאַטיש";
+                    il = "ארץ ישראל";
                     uk = "לאָנדאָן";
                     us = "אמעריקע";
                     ar = "ארגענטינע";
                     // Language
                     selectLanguage.Content = "טויש א שפּראַך";
-                    button1.Content = "היט די שפראַך";
+                    button1.Content = "געדענק די שפּראַך";
                     break;
                 case Languages.Spanish:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree en cualquier lugar";
+                    btnConnect.Content = "Conectar";
+                    btnDisconnect.Content = "Desconectar";
+                    // Change Connect ID
+                    changeUserPass.Content = "Cambiar ID de conexión";
+                    ConnectIDLabel.Content = "ID de conexión";
+                    AutoConnectLabel.Text = "Conexión automática";
+                    udpProtocolLabel.Text = " Conectar usando udp";
+                    showText = "Mostrar";
+                    hideText = "Ocultar";
+                    button.Content = "Mostrar";
+                    btnSaveVpnIdentifier.Content = "Guardar";
+                    // Select server
+                    selectServer.Content = "Seleccionar servidor";
+                    autoSelect.Content = "Seleccionar servidor automáticamente";
+                    il = "Israel";
+                    uk = "Londres";
+                    us = "Estados Unidos";
+                    ar = "Argentina";
+                    msText = "ms";
+                    // Language
+                    selectLanguage.Content = "Cambiar idioma";
+                    button1.Content = "Guardar idioma";
                     break;
                 case Languages.Russian:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "Подключиться";
+                    btnDisconnect.Content = "Отключиться";
+                    // Change Connect ID
+                    changeUserPass.Content = "Изменить идентификатор подключения";
+                    ConnectIDLabel.Content = "Идентификатор подключения";
+                    AutoConnectLabel.Text = "Автоматически подключаться";
+                    udpProtocolLabel.Text = "Подключиться используя UDP";
+                    showText = "Вывести на экран";
+                    hideText = "Убрать с экрана";
+                    button.Content = "Вывести на экран";
+                    btnSaveVpnIdentifier.Content = "Сохранение";
+                    // Select server
+                    selectServer.Content = "Выбор сервера";
+                    autoSelect.Content = "Выбрать сервер автоматически";
+                    il = "Израиль";
+                    uk = "Лондон";
+                    us = "США";
+                    ar = "Аргентина";
+                    msText = "мс";
+                    // Language
+                    selectLanguage.Content = "изменение языка";
+                    button1.Content = "Сохранить язык";
                     break;
                 case Languages.Espanol:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "connecter";
+                    btnDisconnect.Content = "Déconnecter";
+                    // Change Connect ID
+                    changeUserPass.Content = "changer l'identifiant de connexion";
+                    ConnectIDLabel.Content = "identifiant de connexion";
+                    AutoConnectLabel.Text = "Connexion automatique";
+                    udpProtocolLabel.Text = "connexion via udp";
+                    showText = "Afficher";
+                    hideText = "Cacher";
+                    button.Content = "Afficher";
+                    btnSaveVpnIdentifier.Content = "sauvegarder";
+                    // Select server
+                    selectServer.Content = "Sélectionnez le serveur";
+                    autoSelect.Content = "Sélectionner un serveur automatiquement";
+                    il = "Israël";
+                    uk = "Argentine";
+                    us = "États Unis";
+                    ar = "Londres";
+                    msText = "ms";
+                    // Language
+                    selectLanguage.Content = "Changer de langue";
+                    button1.Content = "Enregistrer la langue";
                     break;
                 default:
                     break;

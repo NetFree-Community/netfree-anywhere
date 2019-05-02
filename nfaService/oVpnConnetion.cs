@@ -130,7 +130,7 @@ namespace nfaService
 
                 File.WriteAllText(pathConfig, ovpnConfig);
 
-
+                
                 var pInfo = new ProcessStartInfo();
 
                 //pInfo.WindowStyle = ProcessWindowStyle.Hidden;
