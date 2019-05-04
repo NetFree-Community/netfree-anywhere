@@ -29,7 +29,22 @@ namespace nfaTray
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-
+        string msText = "ms";
+        string showText = "הצג";
+        string hideText = "הסתר";
+        string il = "ישראל";
+        string uk = "לונדון";
+        string us = "ארצות הברית";
+        string ar = "ארגנטינה";
+        public enum Languages
+        {
+            Hebrew = 1,
+            English = 2,
+            Idish = 3,
+            Spanish = 4,
+            Russian = 5,
+            Espanol = 6
+        }
         static readonly string[] SizeSuffixes = { "bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
         static string SizeSuffix(Int64 value)
         {
@@ -88,6 +103,17 @@ namespace nfaTray
                 _vpnError = value;
                 vpnStatus = (value == null) ? null : "error";
                 OnPropertyChanged("vpnError");
+                if (value != null)
+                {
+                    Thread t = new Thread(() =>
+                    {
+                            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                            {
+                                connectVpn();
+                                Thread.Sleep(5000);
+                            }
+                    });
+                }
             }
         }
         public string ipAddress { get; set; }
@@ -102,10 +128,26 @@ namespace nfaTray
             public const int Servers = 1;
             public const int UserPass = 2;
             public const int VpnIdentifier = 3;
+            public const int Languages = 4;
         };
+        private bool _vpnIdentifierViewed;
+
+        public bool VpnIdentifierViewed
+        {
+            get
+            {
+                return _vpnIdentifierViewed;
+            }
+            set
+            {
+                _vpnIdentifierViewed = value;
+            }
+        }
+        
 
         public MainWindow()
         {
+            VpnIdentifierViewed = false;
 
             if (Properties.Settings.Default.UpgradeRequired)
             {
@@ -124,7 +166,7 @@ namespace nfaTray
             if (Properties.Settings.Default.VpnIdentifier.IndexOf(':') == -1)
             {
                 TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
-                vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+                vpnIdentifierText.Text = Properties.Settings.Default.VpnIdentifier;
                 autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             }
 
@@ -134,7 +176,7 @@ namespace nfaTray
             ni.Icon = nfaTray.Properties.Resources.NetFreeAnywareLogoSq;
             ni.Click += ni_Click;
 
-
+            SetLanguage((Languages)Properties.Settings.Default.Language);
             ConnectToService();
 
 
@@ -145,8 +187,12 @@ namespace nfaTray
             cboServers.ItemsSource = listServers;
             cboServers.SelectionChanged += cboServers_SelectionChanged;
 
-            if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':')>-1)
+            if (Properties.Settings.Default.AutoConnect && Properties.Settings.Default.VpnIdentifier.IndexOf(':') > -1)
+            {
                 connectVpn();
+
+            }
+
 
         }
 
@@ -195,7 +241,8 @@ namespace nfaTray
                 service.SubscribeClient();
             }
             catch (Exception)
-            { 
+            {
+                vpnError = "לא ידוע";
             }
             
             
@@ -219,9 +266,10 @@ namespace nfaTray
             var list = nfaServers.GetServers();
 
             var countryMap = new Dictionary<string, Country>();
-            countryMap["il"] = new Country { Name = "ישראל" };
-            countryMap["uk"] = new Country { Name = "לונדון" };
-            countryMap["us"] = new Country { Name = "ארצות הברית" };
+            countryMap["il"] = new Country { Name = il };
+            countryMap["uk"] = new Country { Name = uk };
+            countryMap["us"] = new Country { Name = us };
+            countryMap["ar"] = new Country { Name = ar };
 
             listServers.Clear();
             foreach (var item in list)
@@ -293,6 +341,15 @@ namespace nfaTray
                             service.Disconnect();
                         });
                     }).Start();
+                    //if (Properties.Settings.Default.AutoConnect)
+                    //{
+                    //    for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+                    //    {
+                    //        Thread.Sleep(3000);
+                    //        connectVpn();
+                    //    }
+                    //}
+
                 }
             }
             if (state.StartsWith(">STATE:"))
@@ -384,12 +441,20 @@ namespace nfaTray
             vpnStatus = "connecting";
 
 
-
             ProtocolType proto = ProtocolType.Unknown;
             string hostName = Properties.Settings.Default.Host;
             string userName = "";
             string password = "";
             int port = 0;
+
+            Properties.Settings.Default.VpnIdentifier.Replace(" ", "");
+            for (int i = 0; i < Properties.Settings.Default.VpnIdentifier.Length; i++)
+            {
+                if (char.IsControl(Properties.Settings.Default.VpnIdentifier.ToCharArray()[i]))
+                {
+                    Properties.Settings.Default.VpnIdentifier.Replace(Properties.Settings.Default.VpnIdentifier.ToCharArray()[i].ToString(), "");
+                }
+            }
 
 
             Regex VpnIdentifierRegex = new Regex("^((?<proto>tcp|udp)://)?(?<user>[^:]+):(?<pass>[^@]+)(@(?<host>[^:]+)(:(?<port>\\d+))?)?");
@@ -404,7 +469,8 @@ namespace nfaTray
                 password = match.Groups["pass"].Value;
                 port = match.Groups["port"].Value != "" ? int.Parse(match.Groups["port"].Value) : port;
             }
-
+            if ((bool)udpProtocol.IsChecked)
+                proto = ProtocolType.Udp;
 
  
             Action hasPort = () =>
@@ -530,6 +596,10 @@ namespace nfaTray
                     hasHost();
                 });
             }
+            for (int i = 0; i < 3 && vpnStatus == "error"; i++)
+            {
+                ConnectToService();
+            }
 
         }
 
@@ -591,7 +661,7 @@ namespace nfaTray
             //iptUser.Text = Properties.Settings.Default.User;
             //iptPassword.Text = Properties.Settings.Default.Password;
 
-            vpnIdentifier.Text = Properties.Settings.Default.VpnIdentifier;
+            vpnIdentifierPass.Password = Properties.Settings.Default.VpnIdentifier;
             autoConnect.IsChecked = Properties.Settings.Default.AutoConnect;
             TabControlWiz.SelectedIndex = Tabs.VpnIdentifier;
         }
@@ -627,8 +697,13 @@ namespace nfaTray
 
         private void btnSaveVpnIdentifier_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.VpnIdentifier = vpnIdentifier.Text;
-            Properties.Settings.Default.AutoConnect = autoConnect.IsChecked??false;
+            if (!VpnIdentifierViewed)
+            {
+                vpnIdentifierText.Text = vpnIdentifierPass.Password;
+            }
+            Properties.Settings.Default.VpnIdentifier = vpnIdentifierText.Text;
+            Properties.Settings.Default.AutoConnect = autoConnect.IsChecked ?? false;
+            Properties.Settings.Default.udpProtocol = udpProtocol.IsChecked ?? false;
             Properties.Settings.Default.Save();
             TabControlWiz.SelectedIndex = Tabs.Main;
         }
@@ -658,6 +733,229 @@ namespace nfaTray
             }
         }
 
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            if (!VpnIdentifierViewed)
+            {
+                vpnIdentifierText.Text = vpnIdentifierPass.Password;
+                vpnIdentifierPass.Visibility = Visibility.Collapsed;
+                vpnIdentifierText.Visibility = Visibility.Visible;
+                button.Content = hideText;
+                VpnIdentifierViewed = true;
+            }
+            else
+            {
+                vpnIdentifierPass.Password = vpnIdentifierText.Text;
+                vpnIdentifierPass.Visibility = Visibility.Visible;
+                vpnIdentifierText.Visibility = Visibility.Collapsed;
+                button.Content = showText;
+                VpnIdentifierViewed = false;
+            }
+        }
+        public void SetLanguage(Languages lang)
+        {
+            switch (lang)
+            {
+                case Languages.Hebrew:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "התחבר";
+                    btnDisconnect.Content = "התנתק";
+                    // Change Connect ID
+                    changeUserPass.Content = "שנה מזהה חיבור";
+                    ConnectIDLabel.Content = "מזהה חיבור";
+                    AutoConnectLabel.Text = "התחברות אוטומטית";
+                    udpProtocolLabel.Text = "התחברות באמצעות udp";
+                    showText = "הצג";
+                    hideText = "הסתר";
+                    button.Content = "הצג";
+                    btnSaveVpnIdentifier.Content = "שמור";
+                    // Select server
+                    selectServer.Content = "בחר שרת";
+                    autoSelect.Content = "בחר שרת אוטומטית";
+                    il = "ישראל";
+                    uk = "לונדון";
+                    us = "ארצות הברית";
+                    ar = "ארגנטינה";
+                    // Language
+                    selectLanguage.Content = "בחר שפה";
+                    button1.Content = "שמור שפה";
+                    break;
+                case Languages.English:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "Connect";
+                    btnDisconnect.Content = "Disconnect";
+                    // Change Connect ID
+                    changeUserPass.Content = "Change Connection ID";
+                    ConnectIDLabel.Content = "Connection ID";
+                    AutoConnectLabel.Text = "Connect Automatically";
+                    udpProtocolLabel.Text = "Connect via UDP";
+                    showText = "Show";
+                    hideText = "Hide";
+                    button.Content = "Show";
+                    btnSaveVpnIdentifier.Content = "Save";
+                    // Select server
+                    selectServer.Content = "Select a Server";
+                    autoSelect.Content = "Selct server Automatically";
+                    il = "Israel";
+                    uk = "London";
+                    us = "United States";
+                    ar = "Argentina";
+                    // Language
+                    selectLanguage.Content = "Change language";
+                    button1.Content = "Save language";
+                    break;
+                case Languages.Idish:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.RightToLeft;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "פארבינד זיך";
+                    btnDisconnect.Content = "האק אפ";
+                    // Change Connect ID
+                    changeUserPass.Content = "טויש די קאַנעקשאַן דעטאלן";
+                    ConnectIDLabel.Content = "קאַנעקשאַן דעטאלן";
+                    AutoConnectLabel.Text = "זיך צו פארבינדן אָטאַמאַטיש";
+                    udpProtocolLabel.Text = "פארבינדן דורך udp";
+                    showText = "בּאַווייז";
+                    hideText = "בּאַהאַלט";
+                    button.Content = "בּאַווייז";
+                    btnSaveVpnIdentifier.Content = "געדענק די אינפאָרמאַציע";
+                    // Select server
+                    selectServer.Content = "וועל אויס א סערווער";
+                    autoSelect.Content = "וועל א סערווער אָטאָמאַטיש";
+                    il = "ארץ ישראל";
+                    uk = "לאָנדאָן";
+                    us = "אמעריקע";
+                    ar = "ארגענטינע";
+                    // Language
+                    selectLanguage.Content = "טויש א שפּראַך";
+                    button1.Content = "געדענק די שפּראַך";
+                    break;
+                case Languages.Spanish:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree en cualquier lugar";
+                    btnConnect.Content = "Conectar";
+                    btnDisconnect.Content = "Desconectar";
+                    // Change Connect ID
+                    changeUserPass.Content = "Cambiar ID de conexión";
+                    ConnectIDLabel.Content = "ID de conexión";
+                    AutoConnectLabel.Text = "Conexión automática";
+                    udpProtocolLabel.Text = " Conectar usando udp";
+                    showText = "Mostrar";
+                    hideText = "Ocultar";
+                    button.Content = "Mostrar";
+                    btnSaveVpnIdentifier.Content = "Guardar";
+                    // Select server
+                    selectServer.Content = "Seleccionar servidor";
+                    autoSelect.Content = "Seleccionar servidor automáticamente";
+                    il = "Israel";
+                    uk = "Londres";
+                    us = "Estados Unidos";
+                    ar = "Argentina";
+                    msText = "ms";
+                    // Language
+                    selectLanguage.Content = "Cambiar idioma";
+                    button1.Content = "Guardar idioma";
+                    break;
+                case Languages.Russian:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "Подключиться";
+                    btnDisconnect.Content = "Отключиться";
+                    // Change Connect ID
+                    changeUserPass.Content = "Изменить идентификатор подключения";
+                    ConnectIDLabel.Content = "Идентификатор подключения";
+                    AutoConnectLabel.Text = "Автоматически подключаться";
+                    udpProtocolLabel.Text = "Подключиться используя UDP";
+                    showText = "Вывести на экран";
+                    hideText = "Убрать с экрана";
+                    button.Content = "Вывести на экран";
+                    btnSaveVpnIdentifier.Content = "Сохранение";
+                    // Select server
+                    selectServer.Content = "Выбор сервера";
+                    autoSelect.Content = "Выбрать сервер автоматически";
+                    il = "Израиль";
+                    uk = "Лондон";
+                    us = "США";
+                    ar = "Аргентина";
+                    msText = "мс";
+                    // Language
+                    selectLanguage.Content = "изменение языка";
+                    button1.Content = "Сохранить язык";
+                    break;
+                case Languages.Espanol:
+                    mainGrid.FlowDirection = System.Windows.FlowDirection.LeftToRight;
+                    // Main
+                    ni.Text = "NetFree Anywhere";
+                    btnConnect.Content = "connecter";
+                    btnDisconnect.Content = "Déconnecter";
+                    // Change Connect ID
+                    changeUserPass.Content = "changer l'identifiant de connexion";
+                    ConnectIDLabel.Content = "identifiant de connexion";
+                    AutoConnectLabel.Text = "Connexion automatique";
+                    udpProtocolLabel.Text = "connexion via udp";
+                    showText = "Afficher";
+                    hideText = "Cacher";
+                    button.Content = "Afficher";
+                    btnSaveVpnIdentifier.Content = "sauvegarder";
+                    // Select server
+                    selectServer.Content = "Sélectionnez le serveur";
+                    autoSelect.Content = "Sélectionner un serveur automatiquement";
+                    il = "Israël";
+                    uk = "Argentine";
+                    us = "États Unis";
+                    ar = "Londres";
+                    msText = "ms";
+                    // Language
+                    selectLanguage.Content = "Changer de langue";
+                    button1.Content = "Enregistrer la langue";
+                    break;
+                default:
+                    break;
+            }
+            
+
+        }
+
+        private void Button1_Click(object sender, RoutedEventArgs e)
+        {
+            if (heItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 1;
+            }
+            else if (enItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 2;
+            }
+            else if (idItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 3;
+            }
+            else if (spItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 4;
+            }
+            else if (ruItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 5;
+            }
+            else if (esItem.IsSelected)
+            {
+                Properties.Settings.Default.Language = 6;
+            }
+            SetLanguage((Languages)Properties.Settings.Default.Language);
+            TabControlWiz.SelectedIndex = Tabs.Main;
+        }
+
+        private void SelectLanguage_Click(object sender, RoutedEventArgs e)
+        {
+            TabControlWiz.SelectedIndex = Tabs.Languages;
+        }
     }
 
     public class ServerInfo
